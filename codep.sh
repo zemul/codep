@@ -96,10 +96,22 @@ done
 
 # 检查 tmux
 if ! command -v tmux &>/dev/null; then
-  echo "❌ 需要安装 tmux"
-  echo "   macOS: brew install tmux"
-  echo "   Linux: sudo apt install tmux"
-  exit 1
+  echo "📦 未检测到 tmux，正在安装..."
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    if command -v brew &>/dev/null; then
+      brew install tmux
+    else
+      echo "❌ 需要先安装 Homebrew: https://brew.sh"
+      exit 1
+    fi
+  elif command -v apt &>/dev/null; then
+    sudo apt install -y tmux
+  elif command -v yum &>/dev/null; then
+    sudo yum install -y tmux
+  else
+    echo "❌ 无法自动安装 tmux，请手动安装"
+    exit 1
+  fi
 fi
 
 # 自动检测 adapter
