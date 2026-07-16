@@ -9,6 +9,12 @@ STATE_FILE="$SPELL_GUARD_DIR/.ai-state"
 # 解析参数
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --update)
+      echo "📦 更新 Codep..."
+      git -C "$SPELL_GUARD_DIR" pull
+      echo "✅ 更新完成"
+      exit 0
+      ;;
     -h|--help)
       echo "Codep ⌨️  AI 等待时间背单词"
       echo ""
@@ -16,6 +22,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "选项:"
       echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex）"
+      echo "  --update            更新到最新版本"
       echo "  -h, --help          显示帮助"
       echo ""
       echo "示例:"
