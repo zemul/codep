@@ -390,8 +390,17 @@ function renderPractice() {
 
   // 底部提示（极简）
   moveTo(rows - 1, 1);
-  const help = "Tab 偷看  ^H 隐藏词  ^D 隐藏释义  ^F 专注  ^S 静音  q 退出";
-  write(" ".repeat(centerPad(help.length, cols)) + `${c.dim}${help}${c.reset}`);
+  const items = [
+    "Tab 偷看",
+    `^H ${hardMode ? "✓" : ""}隐藏词`,
+    `^D ${hideMeaning ? "✓" : ""}隐藏释义`,
+    `^F ${focusMode ? "✓" : ""}专注`,
+    `^S ${autoSpeak ? "" : "✓"}静音`,
+    "q 退出",
+  ];
+  const help = items.join("  ");
+  const visibleLen = help.replace(/✓/g, "✓").length; // ✓ 占位
+  write(" ".repeat(centerPad(visibleLen, cols)) + `${c.dim}${help}${c.reset}`);
 }
 
 function renderWord(cols) {
