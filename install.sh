@@ -45,14 +45,7 @@ echo "  3) Kiro CLI"
 echo "  4) 其他 / 手动配置"
 echo ""
 printf "  请选择 [1-4，默认 1]: "
-
-# 支持 pipe 模式（curl | bash 时无法交互，默认选 1）
-if [ -t 0 ]; then
-  read -r choice
-else
-  choice="1"
-  echo "1（非交互模式，默认 Claude Code）"
-fi
+read -r choice < /dev/tty || choice="1"
 
 case "${choice:-1}" in
   1)
