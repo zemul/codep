@@ -45,7 +45,6 @@ const DICT_REGISTRY = [
   { id: "coca20000", name: "COCA 20000", file: "coca20000.json", description: "美国当代英语语料库 20199 词" },
   { id: "ai-ml", name: "AI·机器学习", file: "ai_machine_learning.json", description: "AI/ML 术语 726 词" },
   { id: "linux", name: "Linux 命令", file: "linux-command.json", description: "Linux 常用命令 575 条" },
-  { id: "custom", name: "自定义(words.json)", file: "../words.json", description: "原有 80 词带音标" },
 ];
 
 // ─── 状态 ───────────────────────────────────────────────
