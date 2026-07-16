@@ -391,12 +391,12 @@ function renderPractice() {
   // 底部提示（极简）
   moveTo(rows - 1, 1);
   const items = [
-    "Tab偷看",
-    hardMode ? "^H已隐藏词" : "^H显示词",
-    hideMeaning ? "^D已隐藏释义" : "^D显示释义",
-    focusMode ? "^F专注中" : "^F自动切回",
-    autoSpeak ? "^S有声" : "^S静音",
-    "q退出",
+    "Tab 偷看",
+    `^H ${hardMode ? "显示词" : "隐藏词"}`,
+    `^D ${hideMeaning ? "显示释义" : "隐藏释义"}`,
+    `^F ${focusMode ? "自动切回" : "专注"}`,
+    `^S ${autoSpeak ? "静音" : "开声"}`,
+    "q 退出",
   ];
   const help = items.join("  ");
   write(" ".repeat(centerPad(help.length, cols)) + `${c.dim}${help}${c.reset}`);
