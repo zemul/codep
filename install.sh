@@ -62,23 +62,15 @@ if ! grep -q "spell-guard/hooks/on-busy.sh" "$CLAUDE_SETTINGS" 2>/dev/null; then
   "
 fi
 
-# 添加 alias（如果没有）
-SHELL_RC="$HOME/.zshrc"
-[ -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.bashrc"
-
-if ! grep -q "alias codep=" "$SHELL_RC" 2>/dev/null; then
-  echo "" >> "$SHELL_RC"
-  echo "# Codep - AI 等待时间背单词" >> "$SHELL_RC"
-  echo "alias codep=\"$INSTALL_DIR/codep.sh\"" >> "$SHELL_RC"
+# 创建软链接到 PATH
+if [ -d "/usr/local/bin" ]; then
+  ln -sf "$INSTALL_DIR/codep.sh" /usr/local/bin/codep 2>/dev/null || \
+    sudo ln -sf "$INSTALL_DIR/codep.sh" /usr/local/bin/codep
 fi
 
 echo ""
 echo "✅ 安装完成！"
 echo ""
-echo "   使用方法："
-echo "   codep          # 启动（需要新开终端或 source ~/.zshrc）"
-echo "   codep --model sonnet  # 带 claude 参数"
-echo ""
-echo "   或直接运行："
-echo "   ~/codep/codep.sh"
+echo "   直接运行："
+echo "   codep"
 echo ""
