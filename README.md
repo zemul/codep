@@ -40,7 +40,7 @@ AI 等待时间背单词 —— 在 Claude Code 执行任务时，自动在 tmux
 一行命令：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourname/codep/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/zemul/codep/main/install.sh | bash
 ```
 
 自动完成：克隆代码 → 配置 Claude Code Hooks → 添加 `codep` 别名。
@@ -54,7 +54,7 @@ codep  # 启动
 ### 手动安装
 
 ```bash
-git clone https://github.com/yourname/codep.git ~/codep
+git clone https://github.com/zemul/codep.git ~/codep
 ~/codep/codep.sh  # 首次运行自动配置 hooks
 ```
 

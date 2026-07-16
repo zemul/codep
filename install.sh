@@ -1,11 +1,11 @@
 #!/bin/bash
 # Codep 一键安装脚本
-# 用法: curl -fsSL https://raw.githubusercontent.com/yourname/codep/main/install.sh | bash
+# 用法: curl -fsSL https://raw.githubusercontent.com/zemul/codep/main/install.sh | bash
 
 set -e
 
 INSTALL_DIR="$HOME/codep"
-REPO="https://github.com/yourname/codep.git"
+REPO="https://github.com/zemul/codep.git"
 
 echo "⌨️  Codep 安装中..."
 echo ""
