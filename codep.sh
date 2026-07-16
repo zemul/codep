@@ -15,6 +15,43 @@ while [[ $# -gt 0 ]]; do
       echo "✅ 更新完成"
       exit 0
       ;;
+    --import)
+      FILE="$2"
+      if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
+        echo "❌ 用法: codep --import <词库.json>"
+        echo "   文件格式: [{\"name\": \"word\", \"trans\": [\"释义\"]}, ...]"
+        exit 1
+      fi
+      # 验证 JSON 格式
+      if ! node -e "const d=JSON.parse(require('fs').readFileSync('$FILE','utf8')); if(!Array.isArray(d))throw new Error('not array'); if(!d[0].name)throw new Error('missing name field'); console.log(d.length+' 个单词')" 2>/dev/null; then
+        echo "❌ JSON 格式不对"
+        echo "   需要: [{\"name\": \"word\", \"trans\": [\"释义\"]}, ...]"
+        exit 1
+      fi
+      # 复制到 dicts 目录
+      BASENAME="$(basename "$FILE")"
+      cp "$FILE" "$SPELL_GUARD_DIR/dicts/$BASENAME"
+      # 计算词数
+      COUNT=$(node -e "process.stdout.write(String(JSON.parse(require('fs').readFileSync('$FILE','utf8')).length))")
+      DICT_ID="${BASENAME%.json}"
+      # 注册到 index.js（如果还没注册）
+      if ! grep -q "\"$DICT_ID\"" "$SPELL_GUARD_DIR/index.js"; then
+        node -e "
+          const fs = require('fs');
+          const f = '$SPELL_GUARD_DIR/index.js';
+          let code = fs.readFileSync(f, 'utf8');
+          const entry = '  { id: \"$DICT_ID\", name: \"$DICT_ID\", file: \"$BASENAME\", description: \"${COUNT} 词 (导入)\" },';
+          code = code.replace(
+            /^(const DICT_REGISTRY = \[)/m,
+            '\$1\n' + entry
+          );
+          fs.writeFileSync(f, code);
+        "
+      fi
+      echo "✅ 已导入: $BASENAME ($COUNT 个单词)"
+      echo "   重启 codep 后可选择该词库"
+      exit 0
+      ;;
     -h|--help)
       echo "Codep ⌨️  AI 等待时间背单词"
       echo ""
@@ -22,6 +59,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "选项:"
       echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex）"
+      echo "  --import <file>     导入自定义词库 JSON"
       echo "  --update            更新到最新版本"
       echo "  -h, --help          显示帮助"
       echo ""
