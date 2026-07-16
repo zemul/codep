@@ -68,9 +68,9 @@ codep --model sonnet  # 带 AI agent 参数
 指定 agent：
 
 ```bash
-CODEP_AGENT=kiro codep         # 强制用 Kiro CLI
-CODEP_AGENT=claude-code codep  # 强制用 Claude Code
-CODEP_AGENT=codex codep        # 强制用 Codex
+codep -a kiro          # 强制用 Kiro CLI
+codep -a claude-code   # 强制用 Claude Code
+codep -a codex         # 强制用 Codex
 ```
 
 ## 快捷键
