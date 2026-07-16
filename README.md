@@ -144,6 +144,8 @@ codep -a codex         # 强制用 Codex
 | tmux | 分屏管理 | macOS: `brew install tmux` / Linux: `sudo apt install tmux` |
 | AI agent | Claude Code / Codex / Kiro 等 | 按各自文档安装 |
 
+> Windows 用户请在 WSL 中使用。
+
 安装脚本会自动检查这些依赖。
 
 ## 致谢
