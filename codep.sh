@@ -9,6 +9,32 @@ STATE_FILE="$SPELL_GUARD_DIR/.ai-state"
 # 解析参数
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      echo "Codep ⌨️  AI 等待时间背单词"
+      echo ""
+      echo "用法: codep [选项] [AI agent 参数...]"
+      echo ""
+      echo "选项:"
+      echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex）"
+      echo "  -h, --help          显示帮助"
+      echo ""
+      echo "示例:"
+      echo "  codep                    # 自动检测 agent"
+      echo "  codep -a kiro            # 使用 Kiro CLI"
+      echo "  codep -a claude-code     # 使用 Claude Code"
+      echo "  codep --model sonnet     # 传参数给 AI agent"
+      echo ""
+      echo "练习快捷键:"
+      echo "  Tab    偷看（闪现单词+释义 1s）"
+      echo "  ^H     隐藏/显示单词"
+      echo "  ^D     隐藏/显示释义"
+      echo "  ^F     开关专注模式（练完整章再切回）"
+      echo "  ^S     静音/开声"
+      echo "  q      退出章节"
+      echo ""
+      echo "https://github.com/zemul/codep"
+      exit 0
+      ;;
     -a|--agent)
       CODEP_AGENT="$2"
       shift 2
