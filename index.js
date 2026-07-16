@@ -394,7 +394,7 @@ function renderPractice() {
     "Tab 偷看",
     `^H ${hardMode ? "显示词" : "隐藏词"}`,
     `^D ${hideMeaning ? "显示释义" : "隐藏释义"}`,
-    `^F ${focusMode ? "自动切回" : "专注"}`,
+    `^F ${focusMode ? "关专注" : "专注"}`,
     `^S ${autoSpeak ? "静音" : "开声"}`,
     "q 退出",
   ];
