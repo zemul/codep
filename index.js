@@ -18,7 +18,7 @@ const AUDIO_CACHE_DIR = path.join(__dirname, "audio-cache");
 const SOUNDS_DIR = path.join(__dirname, "sounds");
 const POLL_INTERVAL_MS = 500;
 const ERROR_FLASH_MS = 600;
-const SESSION_NAME = "spell-guard";
+const SESSION_NAME = "codep";
 const CHAPTER_LENGTH = 20;
 
 // 有道发音 API
@@ -210,6 +210,10 @@ function ensureSoundFiles() {
 // ─── tmux 焦点切换 ────────────────────────────────────────
 function focusAIPane() {
   try { execSync(`tmux select-pane -t "${SESSION_NAME}:0.0"`, { stdio: "ignore" }); } catch (e) {}
+}
+
+function focusPracticePane() {
+  try { execSync(`tmux select-pane -t "${SESSION_NAME}:0.1"`, { stdio: "ignore" }); } catch (e) {}
 }
 
 // ─── 工具 ────────────────────────────────────────────────
@@ -503,8 +507,9 @@ function checkAIState() {
       const state = fs.readFileSync(STATE_FILE, "utf-8").trim();
       if (state === "busy") {
         if (lastAIState !== "busy") {
-          // 状态变化：idle → busy，激活练习
+          // 状态变化：idle → busy，激活练习，切焦点到练习 pane
           lastAIState = "busy";
+          focusPracticePane();
           if (paused) {
             paused = false;
             renderPractice();
