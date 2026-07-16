@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
       echo "用法: codep [选项] [AI agent 参数...]"
       echo ""
       echo "选项:"
-      echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex）"
+      echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex / gal）"
       echo "  --import <file>     导入自定义词库 JSON"
       echo "  --update            更新到最新版本"
       echo "  -h, --help          显示帮助"
@@ -123,9 +123,11 @@ elif command -v kiro-cli &>/dev/null; then
   ADAPTER="kiro"
 elif command -v codex &>/dev/null; then
   ADAPTER="codex"
+elif command -v gal &>/dev/null; then
+  ADAPTER="gal"
 else
-  echo "❌ 找不到支持的 AI agent（claude / kiro-cli / codex）"
-  echo "   支持: claude, kiro-cli, codex"
+  echo "❌ 找不到支持的 AI agent（claude / kiro-cli / codex / gal）"
+  echo "   支持: claude, kiro-cli, codex, gal"
   echo "   或设置 CODEP_AGENT=<agent名>"
   exit 1
 fi
@@ -140,6 +142,9 @@ case "$ADAPTER" in
     ;;
   codex)
     AI_CMD="codex"
+    ;;
+  gal)
+    AI_CMD="gal chat"
     ;;
   *)
     AI_CMD="$ADAPTER"

@@ -1,6 +1,6 @@
 # Codep ⌨️
 
-AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
+AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / GAL）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
 
 灵感来自 [Qwerty Learner](https://github.com/RealKai42/qwerty-learner)，为终端用户设计。
 
@@ -61,7 +61,7 @@ git clone https://github.com/zemul/codep.git ~/codep
 ## 使用
 
 ```bash
-codep              # 启动（自动检测 kiro-cli / claude / codex）
+codep              # 启动（自动检测 kiro-cli / claude / codex / gal）
 codep --model sonnet  # 带 AI agent 参数
 ```
 
@@ -71,6 +71,7 @@ codep --model sonnet  # 带 AI agent 参数
 codep -a kiro          # 强制用 Kiro CLI
 codep -a claude-code   # 强制用 Claude Code
 codep -a codex         # 强制用 Codex
+codep -a gal           # 强制用 GAL
 ```
 
 ## 快捷键
@@ -116,15 +117,15 @@ codep -a codex         # 强制用 Codex
 ## 工作原理
 
 ```
-┌─────────────────────────────────────────────┐
-│  AI Agent (Claude Code / Kiro CLI / Codex)  │
-│                                             │
-│  UserPromptSubmit hook → on-busy.sh         │
-│       写 "busy" 到 .ai-state               │
-│                                             │
-│  Stop hook → on-idle.sh                     │
-│       写 "idle" 到 .ai-state               │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  AI Agent (Claude Code / Kiro CLI / Codex / GAL)    │
+│                                                     │
+│  UserPromptSubmit hook → on-busy.sh                 │
+│       写 "busy" 到 .ai-state                       │
+│                                                     │
+│  Stop hook → on-idle.sh                             │
+│       写 "idle" 到 .ai-state                       │
+└─────────────────────────────────────────────────────┘
                     │
                     ▼ 文件
 ┌─────────────────────────────────────────────┐
@@ -142,7 +143,7 @@ codep -a codex         # 强制用 Codex
 |---|---|---|
 | Node.js 16+ | 运行练习 UI | [nodejs.org](https://nodejs.org) |
 | tmux | 分屏管理 | macOS: `brew install tmux` / Linux: `sudo apt install tmux` |
-| AI agent | Claude Code / Codex / Kiro 等 | 按各自文档安装 |
+| AI agent | Claude Code / Codex / Kiro / GAL 等 | 按各自文档安装 |
 
 > Windows 用户请在 WSL 中使用。
 

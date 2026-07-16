@@ -38,7 +38,17 @@ codep                          # 自动检测（优先 kiro-cli）
 CODEP_AGENT=kiro codep       # 手动指定 Kiro
 CODEP_AGENT=claude-code codep  # 手动指定 Claude Code
 CODEP_AGENT=codex codep      # 手动指定 Codex
+CODEP_AGENT=gal codep        # 手动指定 GAL
 ```
+
+### GAL
+
+通过 [Hooks](https://docs.gal.dev/hooks) 实现，零延迟。
+
+- `on-busy.sh` — 绑定 `pre_turn` 事件（用户输入进入 agent 之前）
+- `on-idle.sh` — 绑定 `post_turn` 事件（agent 回复完成之后）
+
+安装时自动配置到 `~/.gal/hooks.yaml`。
 
 ### OpenAI Codex CLI
 
