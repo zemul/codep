@@ -65,7 +65,7 @@ codep              # 启动（自动检测 kiro-cli / claude / codex）
 codep --model sonnet  # 带 AI agent 参数
 ```
 
-指定 adapter：
+指定 agent：
 
 ```bash
 CODEP_ADAPTER=kiro codep         # 强制用 Kiro CLI
