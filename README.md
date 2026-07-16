@@ -1,6 +1,6 @@
 # Codep ⌨️
 
-AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
+AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
 
 灵感来自 [Qwerty Learner](https://github.com/RealKai42/qwerty-learner)，为终端用户设计。
 
@@ -68,9 +68,9 @@ codep --model sonnet  # 带 AI agent 参数
 指定 agent：
 
 ```bash
-CODEP_ADAPTER=kiro codep         # 强制用 Kiro CLI
-CODEP_ADAPTER=claude-code codep  # 强制用 Claude Code
-CODEP_ADAPTER=codex codep        # 强制用 Codex
+CODEP_AGENT=kiro codep         # 强制用 Kiro CLI
+CODEP_AGENT=claude-code codep  # 强制用 Claude Code
+CODEP_AGENT=codex codep        # 强制用 Codex
 ```
 
 ## 快捷键
@@ -117,7 +117,7 @@ CODEP_ADAPTER=codex codep        # 强制用 Codex
 
 ```
 ┌─────────────────────────────────────────────┐
-│  AI Agent (Claude Code / Kiro CLI)          │
+│  AI Agent (Claude Code / Kiro CLI / Codex)  │
 │                                             │
 │  UserPromptSubmit hook → on-busy.sh         │
 │       写 "busy" 到 .ai-state               │

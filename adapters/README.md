@@ -35,9 +35,9 @@ Codep 通过 adapter（适配器）支持不同的 AI agent。每个 adapter 负
 
 ```bash
 codep                          # 自动检测（优先 kiro-cli）
-CODEP_ADAPTER=kiro codep       # 手动指定 Kiro
-CODEP_ADAPTER=claude-code codep  # 手动指定 Claude Code
-CODEP_ADAPTER=codex codep      # 手动指定 Codex
+CODEP_AGENT=kiro codep       # 手动指定 Kiro
+CODEP_AGENT=claude-code codep  # 手动指定 Claude Code
+CODEP_AGENT=codex codep      # 手动指定 Codex
 ```
 
 ### OpenAI Codex CLI

@@ -10,11 +10,11 @@ STATE_FILE="$SPELL_GUARD_DIR/.ai-state"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -a|--agent)
-      CODEP_ADAPTER="$2"
+      CODEP_AGENT="$2"
       shift 2
       ;;
     --agent=*)
-      CODEP_ADAPTER="${1#*=}"
+      CODEP_AGENT="${1#*=}"
       shift
       ;;
     *)
@@ -32,8 +32,8 @@ if ! command -v tmux &>/dev/null; then
 fi
 
 # 自动检测 adapter
-if [ -n "$CODEP_ADAPTER" ]; then
-  ADAPTER="$CODEP_ADAPTER"
+if [ -n "$CODEP_AGENT" ]; then
+  ADAPTER="$CODEP_AGENT"
 elif command -v kiro-cli &>/dev/null; then
   ADAPTER="kiro"
 elif command -v claude &>/dev/null; then
@@ -43,7 +43,7 @@ elif command -v codex &>/dev/null; then
 else
   echo "❌ 找不到支持的 AI agent（claude / kiro-cli / codex）"
   echo "   支持: claude, kiro-cli, codex"
-  echo "   或设置 CODEP_ADAPTER=<adapter名>"
+  echo "   或设置 CODEP_AGENT=<agent名>"
   exit 1
 fi
 
