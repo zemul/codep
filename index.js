@@ -390,15 +390,13 @@ function renderPractice() {
 
   // 底部提示（极简）
   moveTo(rows - 1, 1);
-  const items = [
-    "Tab 偷看",
-    `^H ${hardMode ? "显示词" : "隐藏词"}`,
-    `^D ${hideMeaning ? "显示释义" : "隐藏释义"}`,
-    `^F ${focusMode ? "关专注" : "专注"}`,
-    `^S ${autoSpeak ? "静音" : "开声"}`,
-    "q 退出",
-  ];
-  const help = items.join("  ");
+  const status = [];
+  if (hardMode) status.push("隐藏词");
+  if (hideMeaning) status.push("隐藏释义");
+  if (focusMode) status.push("专注");
+  if (!autoSpeak) status.push("静音");
+  const statusStr = status.length ? `[${status.join(" | ")}]  ` : "";
+  const help = `${statusStr}Tab ^H ^D ^F ^S q`;
   write(" ".repeat(centerPad(help.length, cols)) + `${c.dim}${help}${c.reset}`);
 }
 
