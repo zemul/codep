@@ -2,7 +2,7 @@
 
 AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / GAL）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
 
-![demo](https://github.com/zemul/codep/releases/download/v1.0.0/export-1784206869768.2.gif)
+![demo](https://github.com/zemul/codep/releases/download/v1.0.0/export-1784207294336.1.gif)
 
 灵感来自 [Qwerty Learner](https://github.com/RealKai42/qwerty-learner)，为终端用户设计。
 
