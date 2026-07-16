@@ -34,10 +34,10 @@ fi
 # 自动检测 adapter
 if [ -n "$CODEP_AGENT" ]; then
   ADAPTER="$CODEP_AGENT"
-elif command -v kiro-cli &>/dev/null; then
-  ADAPTER="kiro"
 elif command -v claude &>/dev/null; then
   ADAPTER="claude-code"
+elif command -v kiro-cli &>/dev/null; then
+  ADAPTER="kiro"
 elif command -v codex &>/dev/null; then
   ADAPTER="codex"
 else
