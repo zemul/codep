@@ -1,0 +1,12 @@
+# 缓存和状态文件
+.ai-state
+.tmux.conf
+.progress.json
+audio-cache/
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
