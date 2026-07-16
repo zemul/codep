@@ -38,29 +38,9 @@ chmod +x "$INSTALL_DIR/codep.sh"
 chmod +x "$INSTALL_DIR/hooks/on-busy.sh"
 chmod +x "$INSTALL_DIR/hooks/on-idle.sh"
 
-# 配置 Claude Code Hooks
-CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-mkdir -p "$HOME/.claude"
-if [ ! -f "$CLAUDE_SETTINGS" ]; then
-  echo '{}' > "$CLAUDE_SETTINGS"
-fi
-
-if ! grep -q "spell-guard/hooks/on-busy.sh" "$CLAUDE_SETTINGS" 2>/dev/null; then
-  echo "🔗 配置 Claude Code Hooks..."
-  node -e "
-    const fs = require('fs');
-    const f = '$CLAUDE_SETTINGS';
-    const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-    if (!s.hooks) s.hooks = {};
-    if (!s.hooks.UserPromptSubmit) s.hooks.UserPromptSubmit = [];
-    if (!s.hooks.Stop) s.hooks.Stop = [];
-    const busyHook = { hooks: [{ type: 'command', command: '$INSTALL_DIR/hooks/on-busy.sh' }] };
-    const idleHook = { hooks: [{ type: 'command', command: '$INSTALL_DIR/hooks/on-idle.sh' }] };
-    if (!JSON.stringify(s.hooks.UserPromptSubmit).includes('on-busy.sh')) s.hooks.UserPromptSubmit.push(busyHook);
-    if (!JSON.stringify(s.hooks.Stop).includes('on-idle.sh')) s.hooks.Stop.push(idleHook);
-    fs.writeFileSync(f, JSON.stringify(s, null, 2));
-  "
-fi
+# 配置默认 adapter（Claude Code）
+echo "🔗 配置 AI adapter..."
+CODEP_HOME="$INSTALL_DIR" bash "$INSTALL_DIR/adapters/claude-code/install.sh"
 
 # 创建软链接到 PATH
 if [ -d "/usr/local/bin" ]; then

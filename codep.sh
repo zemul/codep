@@ -20,33 +20,11 @@ if ! command -v claude &>/dev/null; then
   exit 1
 fi
 
-# 自动配置 Claude Code Hooks（幂等）
-CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-mkdir -p "$HOME/.claude"
-if [ ! -f "$CLAUDE_SETTINGS" ]; then
-  echo '{}' > "$CLAUDE_SETTINGS"
-fi
-
-# 检查是否已有 codep hooks
-if ! grep -q "codep/hooks/on-busy.sh" "$CLAUDE_SETTINGS" 2>/dev/null; then
-  echo "📝 正在配置 Claude Code Hooks..."
-  # 用 node 安全地合并 JSON（避免 jq 依赖）
-  node -e "
-    const fs = require('fs');
-    const f = '$CLAUDE_SETTINGS';
-    const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-    if (!s.hooks) s.hooks = {};
-    if (!s.hooks.UserPromptSubmit) s.hooks.UserPromptSubmit = [];
-    if (!s.hooks.Stop) s.hooks.Stop = [];
-    const busyHook = { hooks: [{ type: 'command', command: '$SPELL_GUARD_DIR/hooks/on-busy.sh' }] };
-    const idleHook = { hooks: [{ type: 'command', command: '$SPELL_GUARD_DIR/hooks/on-idle.sh' }] };
-    const hasBusy = JSON.stringify(s.hooks.UserPromptSubmit).includes('on-busy.sh');
-    const hasIdle = JSON.stringify(s.hooks.Stop).includes('on-idle.sh');
-    if (!hasBusy) s.hooks.UserPromptSubmit.push(busyHook);
-    if (!hasIdle) s.hooks.Stop.push(idleHook);
-    fs.writeFileSync(f, JSON.stringify(s, null, 2));
-  "
-  echo "✅ Hooks 已配置"
+# 自动配置 adapter（默认 Claude Code）
+ADAPTER="${CODEP_ADAPTER:-claude-code}"
+ADAPTER_INSTALL="$SPELL_GUARD_DIR/adapters/$ADAPTER/install.sh"
+if [ -f "$ADAPTER_INSTALL" ]; then
+  CODEP_HOME="$SPELL_GUARD_DIR" bash "$ADAPTER_INSTALL"
 fi
 
 # 如果已经在 tmux 里，不要嵌套
