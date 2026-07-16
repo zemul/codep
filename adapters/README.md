@@ -17,10 +17,27 @@ Codep 通过 adapter（适配器）支持不同的 AI agent。每个 adapter 负
 
 通过 [Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) 实现，零延迟。
 
-- `hooks/on-busy.sh` — 绑定 `UserPromptSubmit` 事件
-- `hooks/on-idle.sh` — 绑定 `Stop` 事件
+- `on-busy.sh` — 绑定 `UserPromptSubmit` 事件
+- `on-idle.sh` — 绑定 `Stop` 事件
 
 安装时自动配置到 `~/.claude/settings.json`。
+
+### Kiro CLI
+
+通过 [Hooks](https://docs.aws.amazon.com/kiro/latest/userguide/hooks.html) 实现，零延迟。
+
+- `on-busy.sh` — 绑定 `userPromptSubmit` 事件
+- `on-idle.sh` — 绑定 `stop` 事件
+
+安装时自动配置到 `~/.kiro/agents/default.json`。
+
+使用：
+
+```bash
+codep                          # 自动检测（优先 kiro-cli）
+CODEP_ADAPTER=kiro codep       # 手动指定 Kiro
+CODEP_ADAPTER=claude-code codep  # 手动指定 Claude Code
+```
 
 ## 添加新 adapter
 
@@ -32,10 +49,6 @@ Codex CLI 支持 `--notify` 参数或可以包装启动脚本：
 # adapters/codex.sh
 # 包装 codex 命令，拦截输入输出来判断状态
 ```
-
-### Kiro CLI
-
-如果 Kiro 支持类似的 hooks 机制，创建对应的 hook 脚本即可。
 
 ### 通用（任何 agent）
 

@@ -1,6 +1,6 @@
 # Codep ⌨️
 
-AI 等待时间背单词 —— 在 Claude Code 执行任务时，自动在 tmux 分屏里启动英语拼写练习。
+AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI）执行任务时，自动在 tmux 分屏里启动英语拼写练习。
 
 灵感来自 [Qwerty Learner](https://github.com/RealKai42/qwerty-learner)，为终端用户设计。
 
@@ -25,7 +25,7 @@ AI 等待时间背单词 —— 在 Claude Code 执行任务时，自动在 tmux
 
 ## 特性
 
-- **自动感知 AI 状态** — Claude 开始工作时自动激活练习，完成时切回焦点（Hooks 零延迟）
+- **自动感知 AI 状态** — AI 开始工作时自动激活练习，完成时切回焦点（Hooks 零延迟）
 - **逐字母反馈** — 打对变绿，打错整词重来（Qwerty Learner 风格）
 - **真人发音** — 有道词典 API，自动缓存到本地
 - **机械键盘音效** — 按键/正确/错误各有音效
@@ -43,7 +43,7 @@ AI 等待时间背单词 —— 在 Claude Code 执行任务时，自动在 tmux
 curl -fsSL https://raw.githubusercontent.com/zemul/codep/main/install.sh | bash
 ```
 
-自动完成：克隆代码 → 配置 Claude Code Hooks → 添加 `codep` 别名。
+自动完成：克隆代码 → 配置 AI Agent Hooks → 添加 `codep` 别名。
 
 安装后新开终端或 `source ~/.zshrc`，然后：
 
@@ -61,8 +61,15 @@ git clone https://github.com/zemul/codep.git ~/codep
 ## 使用
 
 ```bash
-codep              # 启动
-codep --model sonnet  # 带 claude 参数
+codep              # 启动（自动检测 kiro-cli 或 claude）
+codep --model sonnet  # 带 AI agent 参数
+```
+
+指定 adapter：
+
+```bash
+CODEP_ADAPTER=kiro codep         # 强制用 Kiro CLI
+CODEP_ADAPTER=claude-code codep  # 强制用 Claude Code
 ```
 
 ## 快捷键
@@ -109,7 +116,7 @@ codep --model sonnet  # 带 claude 参数
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Claude Code                                │
+│  AI Agent (Claude Code / Kiro CLI)          │
 │                                             │
 │  UserPromptSubmit hook → on-busy.sh         │
 │       写 "busy" 到 .ai-state               │
@@ -124,7 +131,7 @@ codep --model sonnet  # 带 claude 参数
 │                                             │
 │  每 500ms 检查 .ai-state                    │
 │  busy → 激活练习 + 焦点切到练习 pane         │
-│  idle → 焦点切回 claude pane（仅一次）       │
+│  idle → 焦点切回 AI pane（仅一次）           │
 └─────────────────────────────────────────────┘
 ```
 

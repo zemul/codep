@@ -1,10 +1,27 @@
 #!/bin/bash
 # Codep - AI 等待时间背单词
-# 用法: codep [claude 参数...]
+# 用法: codep [-a kiro|claude] [AI agent 参数...]
 
 SPELL_GUARD_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")")" && pwd)"
 SESSION_NAME="codep"
 STATE_FILE="$SPELL_GUARD_DIR/.ai-state"
+
+# 解析参数
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -a|--agent)
+      CODEP_ADAPTER="$2"
+      shift 2
+      ;;
+    --agent=*)
+      CODEP_ADAPTER="${1#*=}"
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 # 检查 tmux
 if ! command -v tmux &>/dev/null; then
@@ -14,14 +31,34 @@ if ! command -v tmux &>/dev/null; then
   exit 1
 fi
 
-# 检查 claude
-if ! command -v claude &>/dev/null; then
-  echo "❌ 找不到 claude 命令"
+# 自动检测 adapter
+if [ -n "$CODEP_ADAPTER" ]; then
+  ADAPTER="$CODEP_ADAPTER"
+elif command -v kiro-cli &>/dev/null; then
+  ADAPTER="kiro"
+elif command -v claude &>/dev/null; then
+  ADAPTER="claude-code"
+else
+  echo "❌ 找不到支持的 AI agent（claude / kiro-cli）"
+  echo "   支持: claude, kiro-cli"
+  echo "   或设置 CODEP_ADAPTER=<adapter名>"
   exit 1
 fi
 
-# 自动配置 adapter（默认 Claude Code）
-ADAPTER="${CODEP_ADAPTER:-claude-code}"
+# 确定 AI 启动命令
+case "$ADAPTER" in
+  kiro)
+    AI_CMD="kiro-cli chat"
+    ;;
+  claude-code)
+    AI_CMD="claude"
+    ;;
+  *)
+    AI_CMD="$ADAPTER"
+    ;;
+esac
+
+# 自动配置 adapter hooks
 ADAPTER_INSTALL="$SPELL_GUARD_DIR/adapters/$ADAPTER/install.sh"
 if [ -f "$ADAPTER_INSTALL" ]; then
   CODEP_HOME="$SPELL_GUARD_DIR" bash "$ADAPTER_INSTALL"
@@ -58,7 +95,7 @@ CONF
 
 # 创建 tmux session（使用自定义配置）
 tmux -f "$TMUX_CONF" new-session -d -s "$SESSION_NAME" -x "$(tput cols)" -y "$(tput lines)" \
-  "claude $*; echo idle > $STATE_FILE; tmux kill-session -t $SESSION_NAME"
+  "$AI_CMD $*; echo idle > $STATE_FILE; tmux kill-session -t $SESSION_NAME"
 
 # 右边开练习 pane（占 40% 宽度）
 tmux split-window -h -t "$SESSION_NAME" -l 40% \
