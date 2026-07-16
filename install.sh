@@ -35,8 +35,9 @@ fi
 
 # 确保脚本可执行
 chmod +x "$INSTALL_DIR/codep.sh"
-chmod +x "$INSTALL_DIR/hooks/on-busy.sh"
-chmod +x "$INSTALL_DIR/hooks/on-idle.sh"
+chmod +x "$INSTALL_DIR/adapters/claude-code/on-busy.sh"
+chmod +x "$INSTALL_DIR/adapters/claude-code/on-idle.sh"
+chmod +x "$INSTALL_DIR/adapters/claude-code/install.sh"
 
 # 配置默认 adapter（Claude Code）
 echo "🔗 配置 AI adapter..."
