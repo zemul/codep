@@ -42,9 +42,10 @@ echo ""
 echo "  1) Claude Code（推荐）"
 echo "  2) Codex CLI"
 echo "  3) Kiro CLI"
-echo "  4) 全部配置"
+echo "  4) GAL"
+echo "  5) 全部配置"
 echo ""
-printf "  请选择 [1-4，默认 1]: "
+printf "  请选择 [1-5，默认 1]: "
 read -r choice < /dev/tty || choice="1"
 
 case "${choice:-1}" in
@@ -58,7 +59,10 @@ case "${choice:-1}" in
     ADAPTERS="kiro"
     ;;
   4)
-    ADAPTERS="claude-code codex kiro"
+    ADAPTERS="gal"
+    ;;
+  5)
+    ADAPTERS="claude-code codex kiro gal"
     ;;
   *)
     ADAPTERS="claude-code"
