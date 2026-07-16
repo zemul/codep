@@ -128,12 +128,15 @@ codep --model sonnet  # 带 claude 参数
 └─────────────────────────────────────────────┘
 ```
 
-## 要求
+## 依赖
 
-- Node.js 16+
-- tmux
-- Claude Code（带 Hooks 支持）
-- macOS / Linux
+| 依赖 | 用途 | 安装 |
+|---|---|---|
+| Node.js 16+ | 运行练习 UI | [nodejs.org](https://nodejs.org) |
+| tmux | 分屏管理 | macOS: `brew install tmux` / Linux: `sudo apt install tmux` |
+| AI agent | Claude Code / Codex / Kiro 等 | 按各自文档安装 |
+
+安装脚本会自动检查这些依赖。
 
 ## License
 
