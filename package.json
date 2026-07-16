@@ -1,15 +1,15 @@
 {
-  "name": "spell-guard",
-  "version": "2.0.0",
-  "description": "在 AI 写代码时练习英语单词拼写 - Qwerty 风格",
+  "name": "codep",
+  "version": "1.0.0",
+  "description": "AI 等待时间背单词 - Qwerty Learner 终端版",
   "main": "index.js",
   "bin": {
-    "spell-guard": "./spell-guard.sh"
+    "codep": "./codep.sh"
   },
   "scripts": {
-    "start": "./spell-guard.sh"
+    "start": "./codep.sh"
   },
-  "keywords": ["english", "typing", "practice", "claude", "ai"],
+  "keywords": ["english", "typing", "practice", "claude", "ai", "terminal"],
   "author": "",
   "license": "MIT"
 }
