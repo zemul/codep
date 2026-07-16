@@ -37,18 +37,19 @@ Codep 通过 adapter（适配器）支持不同的 AI agent。每个 adapter 负
 codep                          # 自动检测（优先 kiro-cli）
 CODEP_ADAPTER=kiro codep       # 手动指定 Kiro
 CODEP_ADAPTER=claude-code codep  # 手动指定 Claude Code
+CODEP_ADAPTER=codex codep      # 手动指定 Codex
 ```
+
+### OpenAI Codex CLI
+
+通过 [Hooks](https://developers.openai.com/codex/hooks/) 实现，零延迟。
+
+- `on-busy.sh` — 绑定 `UserPromptSubmit` 事件
+- `on-idle.sh` — 绑定 `Stop` 事件（输出 JSON `{"continue": true}`）
+
+安装时自动配置到 `~/.codex/hooks.json`。
 
 ## 添加新 adapter
-
-### OpenAI Codex
-
-Codex CLI 支持 `--notify` 参数或可以包装启动脚本：
-
-```bash
-# adapters/codex.sh
-# 包装 codex 命令，拦截输入输出来判断状态
-```
 
 ### 通用（任何 agent）
 

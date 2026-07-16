@@ -38,9 +38,11 @@ elif command -v kiro-cli &>/dev/null; then
   ADAPTER="kiro"
 elif command -v claude &>/dev/null; then
   ADAPTER="claude-code"
+elif command -v codex &>/dev/null; then
+  ADAPTER="codex"
 else
-  echo "❌ 找不到支持的 AI agent（claude / kiro-cli）"
-  echo "   支持: claude, kiro-cli"
+  echo "❌ 找不到支持的 AI agent（claude / kiro-cli / codex）"
+  echo "   支持: claude, kiro-cli, codex"
   echo "   或设置 CODEP_ADAPTER=<adapter名>"
   exit 1
 fi
@@ -52,6 +54,9 @@ case "$ADAPTER" in
     ;;
   claude-code)
     AI_CMD="claude"
+    ;;
+  codex)
+    AI_CMD="codex"
     ;;
   *)
     AI_CMD="$ADAPTER"

@@ -61,7 +61,7 @@ git clone https://github.com/zemul/codep.git ~/codep
 ## 使用
 
 ```bash
-codep              # 启动（自动检测 kiro-cli 或 claude）
+codep              # 启动（自动检测 kiro-cli / claude / codex）
 codep --model sonnet  # 带 AI agent 参数
 ```
 
@@ -70,6 +70,7 @@ codep --model sonnet  # 带 AI agent 参数
 ```bash
 CODEP_ADAPTER=kiro codep         # 强制用 Kiro CLI
 CODEP_ADAPTER=claude-code codep  # 强制用 Claude Code
+CODEP_ADAPTER=codex codep        # 强制用 Codex
 ```
 
 ## 快捷键
