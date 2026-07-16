@@ -146,6 +146,11 @@ codep -a codex         # 强制用 Codex
 
 安装脚本会自动检查这些依赖。
 
+## 致谢
+
+- [Qwerty Learner](https://github.com/RealKai42/qwerty-learner) — 核心交互设计参考（逐字母反馈、整词重来、Tab 偷看等）
+- [有道词典](https://www.youdao.com/) — 真人发音 API
+
 ## License
 
 MIT
