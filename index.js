@@ -14,6 +14,7 @@ const { execFile, execSync, spawn } = require("child_process");
 const DICTS_DIR = path.join(__dirname, "dicts");
 const STATE_FILE = path.join(__dirname, ".ai-state");
 const PROGRESS_FILE = path.join(__dirname, ".progress.json");
+const SETTINGS_FILE = path.join(__dirname, ".settings.json");
 const AUDIO_CACHE_DIR = path.join(__dirname, "audio-cache");
 const SOUNDS_DIR = path.join(__dirname, "sounds");
 const POLL_INTERVAL_MS = 500;
@@ -87,6 +88,34 @@ function saveProgress() {
     progress[currentDictId].completedChapters.push(currentChapter);
   }
   fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+}
+
+// ─── 设置保存/加载 ───────────────────────────────────────
+function loadSettings() {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf-8"));
+    }
+  } catch (e) {}
+  return {};
+}
+
+function saveSettings() {
+  const settings = {
+    hardMode,
+    hideMeaning,
+    autoSpeak,
+    keySoundsEnabled,
+  };
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+}
+
+function applySettings() {
+  const s = loadSettings();
+  if (s.hardMode !== undefined) hardMode = s.hardMode;
+  if (s.hideMeaning !== undefined) hideMeaning = s.hideMeaning;
+  if (s.autoSpeak !== undefined) autoSpeak = s.autoSpeak;
+  if (s.keySoundsEnabled !== undefined) keySoundsEnabled = s.keySoundsEnabled;
 }
 
 // ─── 词库加载 ────────────────────────────────────────────
@@ -581,11 +610,11 @@ function handleChapterMenu(key, code) {
 
 function handlePracticeInput(key, code) {
   // Ctrl+S 静音
-  if (code === 19) { autoSpeak = !autoSpeak; renderPractice(); return; }
+  if (code === 19) { autoSpeak = !autoSpeak; saveSettings(); renderPractice(); return; }
   // Ctrl+H 听写模式（隐藏单词）
-  if (code === 8) { hardMode = !hardMode; renderPractice(); return; }
+  if (code === 8) { hardMode = !hardMode; saveSettings(); renderPractice(); return; }
   // Ctrl+D 隐藏/显示释义
-  if (code === 4) { hideMeaning = !hideMeaning; renderPractice(); return; }
+  if (code === 4) { hideMeaning = !hideMeaning; saveSettings(); renderPractice(); return; }
   // Tab 偷看（临时显示单词+释义 1 秒）
   if (code === 9) {
     peekWord = true;
@@ -639,6 +668,7 @@ function exit() {
 }
 
 // ─── 启动 ────────────────────────────────────────────────
+applySettings();
 ensureSoundFiles();
 pollTimer = setInterval(checkAIState, POLL_INTERVAL_MS);
 
