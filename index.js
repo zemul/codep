@@ -637,7 +637,19 @@ function handlePracticeInput(key, code) {
   // Ctrl+S 静音
   if (code === 19) { autoSpeak = !autoSpeak; saveSettings(); renderPractice(); return; }
   // Ctrl+F 专注模式（练完整章再切回）
-  if (code === 6) { focusMode = !focusMode; saveSettings(); renderPractice(); return; }
+  if (code === 6) {
+    focusMode = !focusMode;
+    saveSettings();
+    renderPractice();
+    // 闪现提示说明功能
+    const msg = focusMode ? "📌 专注模式：练完整章再切回" : "📌 已关闭专注，AI完成自动切回";
+    const cols = process.stdout.columns || 80;
+    const rows = process.stdout.rows || 24;
+    process.stdout.write(`\x1b[${rows - 2};1H\x1b[2K`);
+    process.stdout.write(" ".repeat(Math.max(0, Math.floor((cols - msg.length) / 2))) + `\x1b[33m${msg}\x1b[0m`);
+    setTimeout(() => renderPractice(), 1500);
+    return;
+  }
   // Ctrl+H 听写模式（隐藏单词）
   if (code === 8) { hardMode = !hardMode; saveSettings(); renderPractice(); return; }
   // Ctrl+D 隐藏/显示释义
