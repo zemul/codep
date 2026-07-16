@@ -106,6 +106,7 @@ function saveSettings() {
     hideMeaning,
     autoSpeak,
     keySoundsEnabled,
+    lastDictId: currentDictId,
   };
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
 }
@@ -588,6 +589,7 @@ function handleDictMenu(key, code) {
   else if (code === 13) { // Enter
     const dict = DICT_REGISTRY[menuSelection];
     currentDictId = dict.id;
+    saveSettings();
     words = loadDict(dict);
     totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
     // 恢复上次进度
@@ -672,19 +674,27 @@ applySettings();
 ensureSoundFiles();
 pollTimer = setInterval(checkAIState, POLL_INTERVAL_MS);
 
-// 如果 AI 已经在忙，直接进入上次的词库和章节
-if (fs.existsSync(STATE_FILE) && fs.readFileSync(STATE_FILE, "utf-8").trim() === "busy") {
-  const progress = loadProgress();
-  // 找到有进度的词库，自动继续
-  const lastDict = DICT_REGISTRY.find(d => progress[d.id] && progress[d.id].lastChapter !== undefined);
+// 自动继续上次的词库和章节
+const settings = loadSettings();
+const progress = loadProgress();
+
+function autoResume() {
+  // 优先用 settings 里记录的上次词库
+  const lastDictId = settings.lastDictId;
+  const lastDict = lastDictId && DICT_REGISTRY.find(d => d.id === lastDictId);
   if (lastDict) {
     currentDictId = lastDict.id;
     words = loadDict(lastDict);
     totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
-    startChapter(progress[lastDict.id].lastChapter || 0);
-  } else {
-    renderDictMenu();
+    const chapter = (progress[lastDict.id] && progress[lastDict.id].lastChapter) || 0;
+    startChapter(chapter);
+    return true;
   }
+  return false;
+}
+
+if (fs.existsSync(STATE_FILE) && fs.readFileSync(STATE_FILE, "utf-8").trim() === "busy") {
+  if (!autoResume()) renderDictMenu();
 } else {
-  renderDictMenu();
+  if (!autoResume()) renderDictMenu();
 }
