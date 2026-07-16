@@ -39,34 +39,34 @@ find "$INSTALL_DIR/adapters" -name "*.sh" -exec chmod +x {} \;
 # 选择 AI agent adapter
 echo "🤖 你使用哪个 AI agent？"
 echo ""
-echo "  1) Claude Code（推荐，自动配置 hooks）"
+echo "  1) Claude Code（推荐）"
 echo "  2) Codex CLI"
 echo "  3) Kiro CLI"
-echo "  4) 其他 / 手动配置"
+echo "  4) 全部配置"
 echo ""
 printf "  请选择 [1-4，默认 1]: "
 read -r choice < /dev/tty || choice="1"
 
 case "${choice:-1}" in
   1)
-    ADAPTER="claude-code"
+    ADAPTERS="claude-code"
     ;;
   2)
-    ADAPTER="codex"
+    ADAPTERS="codex"
     ;;
   3)
-    ADAPTER="kiro"
+    ADAPTERS="kiro"
     ;;
   4)
-    ADAPTER=""
+    ADAPTERS="claude-code codex kiro"
     ;;
   *)
-    ADAPTER="claude-code"
+    ADAPTERS="claude-code"
     ;;
 esac
 
 # 安装选中的 adapter
-if [ -n "$ADAPTER" ]; then
+for ADAPTER in $ADAPTERS; do
   ADAPTER_INSTALL="$INSTALL_DIR/adapters/$ADAPTER/install.sh"
   if [ -f "$ADAPTER_INSTALL" ]; then
     echo ""
@@ -77,11 +77,7 @@ if [ -n "$ADAPTER" ]; then
     echo "⚠️  $ADAPTER adapter 暂未实现，欢迎贡献！"
     echo "   参考: $INSTALL_DIR/adapters/README.md"
   fi
-else
-  echo ""
-  echo "ℹ️  跳过 adapter 配置。"
-  echo "   手动配置方法见: $INSTALL_DIR/adapters/README.md"
-fi
+done
 
 # 创建软链接到 PATH
 if [ -d "/usr/local/bin" ]; then
