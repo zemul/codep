@@ -13,6 +13,36 @@ while [[ $# -gt 0 ]]; do
       # 单独运行练习，不启动 agent，不分屏
       exec node "$SPELL_GUARD_DIR/index.js"
       ;;
+    --setup)
+      # 交互选择并安装 adapter hooks
+      echo "🤖 配置 AI agent hooks："
+      echo ""
+      echo "  1) Claude Code"
+      echo "  2) Codex CLI"
+      echo "  3) Kiro CLI"
+      echo "  4) GAL"
+      echo "  5) 全部"
+      echo ""
+      printf "  请选择 [1-5]: "
+      read -r c
+      case "${c:-1}" in
+        1) ADAPTERS="claude-code" ;;
+        2) ADAPTERS="codex" ;;
+        3) ADAPTERS="kiro" ;;
+        4) ADAPTERS="gal" ;;
+        5) ADAPTERS="claude-code codex kiro gal" ;;
+        *) ADAPTERS="claude-code" ;;
+      esac
+      for A in $ADAPTERS; do
+        AI="$SPELL_GUARD_DIR/adapters/$A/install.sh"
+        if [ -f "$AI" ]; then
+          CODEP_HOME="$SPELL_GUARD_DIR" bash "$AI"
+        else
+          echo "⚠️  $A adapter 暂未实现"
+        fi
+      done
+      exit 0
+      ;;
     --update)
       echo "📦 更新 Codep..."
       git -C "$SPELL_GUARD_DIR" pull
@@ -64,6 +94,7 @@ while [[ $# -gt 0 ]]; do
       echo "选项:"
       echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex / gal）"
       echo "  --solo              单独运行练习（不启动 agent，不分屏）"
+      echo "  --setup             配置 AI agent hooks"
       echo "  --import <file>     导入自定义词库 JSON"
       echo "  --update            更新到最新版本"
       echo "  -h, --help          显示帮助"

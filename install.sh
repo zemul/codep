@@ -43,8 +43,9 @@ echo "  2) Codex CLI"
 echo "  3) Kiro CLI"
 echo "  4) GAL"
 echo "  5) 全部配置"
+echo "  6) 跳过（稍后用 codep --setup 配置）"
 echo ""
-printf "  请选择 [1-5，默认 1]: "
+printf "  请选择 [1-6，默认 1]: "
 read -r choice < /dev/tty || choice="1"
 
 case "${choice:-1}" in
@@ -62,6 +63,9 @@ case "${choice:-1}" in
     ;;
   5)
     ADAPTERS="claude-code codex kiro gal"
+    ;;
+  6)
+    ADAPTERS=""
     ;;
   *)
     ADAPTERS="claude-code"
