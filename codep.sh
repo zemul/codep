@@ -9,6 +9,10 @@ STATE_FILE="$SPELL_GUARD_DIR/.ai-state"
 # 解析参数
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --solo)
+      # 单独运行练习，不启动 agent，不分屏
+      exec node "$SPELL_GUARD_DIR/index.js"
+      ;;
     --update)
       echo "📦 更新 Codep..."
       git -C "$SPELL_GUARD_DIR" pull
@@ -59,6 +63,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "选项:"
       echo "  -a, --agent <name>  指定 AI agent（claude-code / kiro / codex / gal）"
+      echo "  --solo              单独运行练习（不启动 agent，不分屏）"
       echo "  --import <file>     导入自定义词库 JSON"
       echo "  --update            更新到最新版本"
       echo "  -h, --help          显示帮助"
