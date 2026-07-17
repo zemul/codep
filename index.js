@@ -719,6 +719,19 @@ function exit() {
 // ─── 启动 ────────────────────────────────────────────────
 applySettings();
 ensureSoundFiles();
+
+// 检测音频播放器（仅 Linux）
+if (process.platform !== "darwin") {
+  const { execFileSync } = require("child_process");
+  const players = ["mpv", "paplay", "aplay"];
+  const hasPlayer = players.some(p => { try { execFileSync("which", [p], { stdio: "ignore" }); return true; } catch { return false; } });
+  if (!hasPlayer) {
+    process.stdout.write("\x1b[33m⚠ 未检测到音频播放器，声音已禁用。安装: sudo apt install mpv\x1b[0m\n");
+    autoSpeak = false;
+    keySoundsEnabled = false;
+  }
+}
+
 pollTimer = setInterval(checkAIState, POLL_INTERVAL_MS);
 
 // 自动继续上次的词库和章节
