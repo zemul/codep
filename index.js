@@ -205,7 +205,13 @@ function speak(word) {
 
 function playAudio(filePath) {
   if (process.platform === "darwin") { execFile("afplay", [filePath], () => {}); }
-  else { execFile("mpv", ["--no-terminal", filePath], (err) => { if (err) execFile("aplay", [filePath], () => {}); }); }
+  else {
+    execFile("mpv", ["--no-terminal", filePath], (err) => {
+      if (err) execFile("paplay", [filePath], (err2) => {
+        if (err2) execFile("aplay", [filePath], () => {});
+      });
+    });
+  }
 }
 
 function fallbackSpeak(word) {
@@ -230,11 +236,16 @@ function playSound(type) {
   if (!keySoundsEnabled) return;
   const file = SOUND_FILES[type];
   if (!file || !fs.existsSync(file)) return;
-  if (process.platform === "darwin") {
-    spawn("afplay", ["-v", "0.3", file], { stdio: "ignore", detached: true }).unref();
-  } else {
-    spawn("aplay", ["-q", file], { stdio: "ignore", detached: true }).unref();
-  }
+  try {
+    let child;
+    if (process.platform === "darwin") {
+      child = spawn("afplay", ["-v", "0.3", file], { stdio: "ignore", detached: true });
+    } else {
+      child = spawn("aplay", ["-q", file], { stdio: "ignore", detached: true });
+    }
+    child.on("error", () => {}); // 播放器不存在时静默跳过
+    child.unref();
+  } catch (e) {}
 }
 
 function ensureSoundFiles() {
