@@ -21,7 +21,6 @@ check_dep() {
 
 check_dep git "请安装 git"
 check_dep node "请安装 Node.js 16+: https://nodejs.org"
-check_dep tmux "macOS: brew install tmux / Linux: sudo apt install tmux"
 
 # 克隆或更新
 if [ -d "$INSTALL_DIR" ]; then
