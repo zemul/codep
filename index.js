@@ -343,7 +343,7 @@ function renderChapterMenu() {
   }
 
   moveTo(rows - 2, 1);
-  const hint = "↑↓←→ 选择 | Enter 确认 | q 返回 | Ctrl+C 退出";
+  const hint = "↑↓←→ 选择 | Enter 确认 | Esc 返回 | Ctrl+C 退出";
   write(" ".repeat(centerPad(hint.length, cols)) + `${c.dim}${hint}${c.reset}`);
 }
 
@@ -406,7 +406,7 @@ function renderPractice() {
     `^D ${hideMeaning ? "显示释义" : "隐藏释义"}`,
     `^F ${focusMode ? "关专注" : "开专注"}`,
     `^S ${autoSpeak ? "静音" : "开声"}`,
-    "q 退出",
+    "Esc 退出",
   ];
   const help = items.join("  ");
   write(" ".repeat(centerPad(help.length, cols)) + `${c.dim}${help}${c.reset}`);
@@ -640,7 +640,7 @@ function handleChapterMenu(key, code) {
   else if (key === "\x1b[D") { menuSelection = Math.max(0, menuSelection - 1); renderChapterMenu(); }
   else if (key === "\x1b[C") { menuSelection = Math.min(totalChapters - 1, menuSelection + 1); renderChapterMenu(); }
   else if (code === 13) { startChapter(menuSelection); }
-  else if (key === "q") { menuMode = "dict"; menuSelection = 0; renderDictMenu(); }
+  else if (key === "\x1b" && key.length === 1) { menuMode = "dict"; menuSelection = 0; renderDictMenu(); }
 }
 
 function handlePracticeInput(key, code) {
@@ -672,8 +672,8 @@ function handlePracticeInput(key, code) {
     setTimeout(() => { peekWord = false; if (menuMode === "practice") renderPractice(); }, 1000);
     return;
   }
-  // q 退出章节
-  if (key === "q" && cursorPos === 0) { menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu(); return; }
+  // Esc 退出章节
+  if (key === "\x1b" && key.length === 1) { menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu(); return; }
   // 暂停中按任意键激活
   if (paused) { paused = false; renderPractice(); speak(currentWord.word); return; }
   // 忽略控制字符
@@ -689,7 +689,7 @@ function handleSummaryInput(key, code) {
     } else {
       menuMode = "chapter"; menuSelection = 0; renderChapterMenu();
     }
-  } else if (key === "q") {
+  } else if (key === "\x1b" && key.length === 1) {
     menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu();
   }
 }
