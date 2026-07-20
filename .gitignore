@@ -3,6 +3,7 @@
 .tmux.conf
 .progress.json
 .settings.json
+.codep-agent
 audio-cache/
 
 # Node

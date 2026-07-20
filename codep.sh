@@ -41,6 +41,10 @@ while [[ $# -gt 0 ]]; do
           echo "⚠️  $A adapter 暂未实现"
         fi
       done
+      # 保存用户选择的 agent（多选时保存第一个）
+      FIRST_ADAPTER=$(echo "$ADAPTERS" | awk '{print $1}')
+      echo "$FIRST_ADAPTER" > "$SPELL_GUARD_DIR/.codep-agent"
+      echo "💾 默认 agent 已设为: $FIRST_ADAPTER"
       exit 0
       ;;
     --update)
@@ -162,8 +166,11 @@ if ! command -v tmux &>/dev/null; then
 fi
 
 # 自动检测 adapter
+# 优先级: -a 参数 > 保存的配置 > 自动检测
 if [ -n "$CODEP_AGENT" ]; then
   ADAPTER="$CODEP_AGENT"
+elif [ -f "$SPELL_GUARD_DIR/.codep-agent" ]; then
+  ADAPTER="$(cat "$SPELL_GUARD_DIR/.codep-agent")"
 elif command -v claude &>/dev/null; then
   ADAPTER="claude-code"
 elif command -v kiro-cli &>/dev/null; then
