@@ -5,16 +5,13 @@
  *   新词(new) → 学习中(learning) → 复习中(review)
  *   答错时 → 回到 learning，短间隔重复
  * 
- * 结果类型：
- *   "correct" — 直接拼对，interval 正常增长
- *   "peeked"  — Tab 偷看后拼对，视为不熟，interval 不增长
- *   "wrong"   — 拼错（重来后拼对），interval 重置
+ * 结果类型兼容旧的 correct/peeked/wrong，并支持 card_* / spelling_*。
  */
 
 const fs = require("fs");
 const path = require("path");
 
-const DATA_DIR = path.join(require("os").homedir(), ".codep");
+const DATA_DIR = process.env.CODEP_DATA_DIR || path.join(require("os").homedir(), ".codep");
 const REVIEW_FILE = path.join(DATA_DIR, "review.json");
 
 // SM-2 参数
@@ -24,6 +21,21 @@ const MAX_EASE = 3.0;
 const EASE_BONUS_CORRECT = 0.1;
 const EASE_PENALTY_WRONG = 0.2;
 const EASE_PENALTY_PEEKED = 0.1;
+
+function normalizeResult(result) {
+  const mapping = {
+    correct: "correct",
+    peeked: "peeked",
+    wrong: "wrong",
+    spelling_correct: "correct",
+    spelling_peeked: "peeked",
+    spelling_wrong: "wrong",
+    card_known: "card_known",
+    card_fuzzy: "peeked",
+    card_unknown: "wrong",
+  };
+  return mapping[result] || "wrong";
+}
 
 // ─── 数据读写 ────────────────────────────────────────────
 
@@ -66,18 +78,23 @@ function isDue(dateStr) {
  */
 function calcNext(card, result) {
   let { interval, ease, repetitions } = card;
+  const normalized = normalizeResult(result);
 
-  if (result === "correct") {
+  if (normalized === "correct" || normalized === "card_known") {
     repetitions++;
     if (repetitions === 1) {
       interval = 1;
     } else if (repetitions === 2) {
       interval = 3;
     } else {
-      interval = Math.round(interval * ease);
+      const recognitionWeight = normalized === "card_known" ? 0.8 : 1;
+      interval = Math.max(1, Math.round(interval * ease * recognitionWeight));
     }
-    ease = Math.min(MAX_EASE, ease + EASE_BONUS_CORRECT);
-  } else if (result === "peeked") {
+    // 认词正确比直接拼写正确更保守，不奖励 ease。
+    if (normalized === "correct") {
+      ease = Math.min(MAX_EASE, ease + EASE_BONUS_CORRECT);
+    }
+  } else if (normalized === "peeked") {
     // 偷看后拼对：不增加 repetitions，interval 不变或轻微增长
     // 但 ease 下降，下次增长会更慢
     if (repetitions > 0 && interval > 1) {
@@ -148,6 +165,28 @@ function getDueCount(dictId) {
   return count;
 }
 
+function initialWeakness(card) {
+  if (typeof card.weaknessScore === "number") return card.weaknessScore;
+  return (card.totalMistakes || 0) > 0 ? Math.min(3, card.totalMistakes) : 0;
+}
+
+function getMistakeWords(dictId) {
+  const data = loadReviewData();
+  return Object.values(data)
+    .filter((card) => (!dictId || card.dictId === dictId) && initialWeakness(card) > 0)
+    .sort((a, b) => initialWeakness(b) - initialWeakness(a) || (b.totalMistakes || 0) - (a.totalMistakes || 0))
+    .map((card) => ({
+      word: card.word,
+      meaning: card.meaning || "",
+      phonetic: card.phonetic || "",
+      dictId: card.dictId,
+    }));
+}
+
+function getMistakeCount(dictId) {
+  return getMistakeWords(dictId).length;
+}
+
 /**
  * 记录练习结果
  * @param {{word, meaning, phonetic}} wordObj - 单词对象
@@ -175,7 +214,16 @@ function recordResult(wordObj, dictId, result) {
   // 更新统计
   card.totalReviews++;
   card.lastReview = today();
-  if (result === "wrong") card.totalMistakes++;
+  let weakness = initialWeakness(card);
+  const normalized = normalizeResult(result);
+  if (normalized === "wrong") card.totalMistakes++;
+
+  if (result === "card_unknown" || result === "spelling_wrong" || result === "wrong") weakness += 2;
+  else if (result === "card_fuzzy" || result === "spelling_peeked" || result === "peeked") weakness += 1;
+  else if (result === "spelling_correct" || result === "correct") weakness -= 2;
+  else if (result === "card_known") weakness -= 1;
+  card.weaknessScore = Math.max(0, Math.min(10, weakness));
+  card.lastMode = typeof result === "string" && result.startsWith("card_") ? "card" : "spelling";
 
   // SM-2 计算
   const next = calcNext(card, result);
@@ -233,8 +281,12 @@ module.exports = {
   saveReviewData,
   getDueWords,
   getDueCount,
+  getMistakeWords,
+  getMistakeCount,
   recordResult,
   getWordStats,
   getOverallStats,
   today,
+  calcNext,
+  normalizeResult,
 };

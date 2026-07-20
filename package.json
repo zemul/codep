@@ -7,7 +7,8 @@
     "codep": "./codep.sh"
   },
   "scripts": {
-    "start": "./codep.sh"
+    "start": "./codep.sh",
+    "test": "node --test"
   },
   "keywords": ["english", "typing", "practice", "claude", "ai", "terminal"],
   "author": "",
