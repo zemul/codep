@@ -1,0 +1,10 @@
+# Force LF line endings for shell scripts (prevent CRLF issues on Windows)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Other text files - normalize to LF in repo
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
