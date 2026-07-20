@@ -22,8 +22,6 @@ AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / 
 
 ## 安装
 
-一行命令：
-
 ```bash
 curl -fsSL https://github.com/zemul/codep/releases/latest/download/install.sh | bash
 ```
