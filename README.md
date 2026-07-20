@@ -4,8 +4,6 @@ AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / 
 
 ![demo](https://github.com/zemul/codep/releases/download/v1.0.0/export-1784207294336.1.gif)
 
-灵感来自 [Qwerty Learner](https://github.com/RealKai42/qwerty-learner)，为终端用户设计。
-
 ## 特性
 
 - **自动感知 AI 状态** — AI 开始工作时自动激活练习，完成时切回焦点（Hooks 零延迟）
@@ -30,8 +28,6 @@ AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / 
 curl -fsSL https://github.com/zemul/codep/releases/latest/download/install.sh | bash
 ```
 
-安装器和实际代码均来自 GitHub 最新的正式 Release，不会直接运行默认分支上的未发布代码。
-
 自动完成：定位最新 Release → 克隆对应 tag → 配置 AI Agent Hooks → 添加 `codep` 命令。
 
 安装后新开终端或 `source ~/.zshrc`，然后：
@@ -43,10 +39,8 @@ codep  # 启动
 ### 手动安装
 
 ```bash
-LATEST_RELEASE_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/zemul/codep/releases/latest)
-LATEST_VERSION=${LATEST_RELEASE_URL##*/}
-git clone --depth 1 --branch "$LATEST_VERSION" https://github.com/zemul/codep.git ~/codep
-~/codep/codep.sh  # 首次运行自动配置 hooks
+git clone https://github.com/zemul/codep.git ~/codep
+~/codep/codep.sh
 ```
 
 ## 使用
