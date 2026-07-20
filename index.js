@@ -588,7 +588,7 @@ function renderSummary() {
     write(" ".repeat(centerPad(hint, cols)) + `${c.dim}${hint}${c.reset}`);
   } else if (reviewMode) {
     const remaining = getDueCount();
-    const hint = remaining > 0 ? `还有 ${remaining} 词到期 | Enter 继续 | Esc 返回` : "r 再来一轮 | Enter 返回 | Ctrl+T 切换方式";
+    const hint = remaining > 0 ? `还有 ${remaining} 词到期 | Enter 继续 | Esc 返回` : "Enter 再来一轮 | Esc 返回 | Ctrl+T 切换方式";
     write(" ".repeat(centerPad(hint, cols)) + `${c.dim}${hint}${c.reset}`);
   } else {
     const hint = "Enter 下一章 | Ctrl+T 切换方式 | Esc 返回";
@@ -1014,8 +1014,7 @@ function handleSummaryInput(key, code) {
       if (remaining > 0) {
         startReviewMode(); // 继续复习剩余词
       } else {
-        reviewMode = false;
-        menuMode = "dict"; menuSelection = 0; renderDictMenu();
+        replayLastReview();
       }
     } else {
       // 章节模式：下一章
@@ -1029,13 +1028,7 @@ function handleSummaryInput(key, code) {
   } else if (key === "r" || key === "R") {
     // 再来一轮：用上次的词列表纯练习，不更新复习数据
     if (reviewMode && lastReviewWords.length > 0) {
-      chapterWords = prepareSessionWords(lastReviewWords);
-      wordIndex = 0;
-      stats = createStats();
-      reviewMode = "replay"; // 标记为重放模式
-      sessionLearningMode = learningMode;
-      menuMode = "practice";
-      nextWord();
+      replayLastReview();
     }
   } else if (key === "\x1b" && key.length === 1) {
     if (reviewMode) {
@@ -1045,6 +1038,21 @@ function handleSummaryInput(key, code) {
       menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu();
     }
   }
+}
+
+function replayLastReview() {
+  if (lastReviewWords.length === 0) {
+    reviewMode = false;
+    menuMode = "dict"; menuSelection = 0; renderDictMenu();
+    return;
+  }
+  chapterWords = prepareSessionWords(lastReviewWords);
+  wordIndex = 0;
+  stats = createStats();
+  reviewMode = "replay";
+  sessionLearningMode = learningMode;
+  menuMode = "practice";
+  nextWord();
 }
 
 function switchLearningMode(render) {
