@@ -14,7 +14,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const REVIEW_FILE = path.join(__dirname, ".review.json");
+const DATA_DIR = path.join(require("os").homedir(), ".codep");
+const REVIEW_FILE = path.join(DATA_DIR, "review.json");
 
 // SM-2 参数
 const INITIAL_EASE = 2.5;

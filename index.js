@@ -12,11 +12,12 @@ const { execFile, execSync, spawn } = require("child_process");
 const { getDueWords, getDueCount, recordResult, getOverallStats } = require("./review");
 
 // ─── 配置 ───────────────────────────────────────────────
+const DATA_DIR = path.join(require("os").homedir(), ".codep");
 const DICTS_DIR = path.join(__dirname, "dicts");
 const STATE_FILE = path.join(__dirname, ".ai-state");
-const PROGRESS_FILE = path.join(__dirname, ".progress.json");
-const SETTINGS_FILE = path.join(__dirname, ".settings.json");
-const AUDIO_CACHE_DIR = path.join(__dirname, "audio-cache");
+const PROGRESS_FILE = path.join(DATA_DIR, "progress.json");
+const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
+const AUDIO_CACHE_DIR = path.join(DATA_DIR, "audio-cache");
 const SOUNDS_DIR = path.join(__dirname, "sounds");
 const POLL_INTERVAL_MS = 500;
 const ERROR_FLASH_MS = 600;
@@ -28,8 +29,35 @@ const YOUDAO_API = "https://dict.youdao.com/dictvoice";
 const PRONUNCIATION_TYPE = 2; // 1=英式 2=美式
 
 // 确保目录存在
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(AUDIO_CACHE_DIR)) fs.mkdirSync(AUDIO_CACHE_DIR, { recursive: true });
 if (!fs.existsSync(SOUNDS_DIR)) fs.mkdirSync(SOUNDS_DIR, { recursive: true });
+
+// ─── 旧数据迁移（从项目目录迁移到 ~/.codep/）──────────────
+const MIGRATE_MAP = [
+  [".progress.json", "progress.json"],
+  [".settings.json", "settings.json"],
+  [".review.json", "review.json"],
+];
+for (const [oldName, newName] of MIGRATE_MAP) {
+  const oldPath = path.join(__dirname, oldName);
+  const newPath = path.join(DATA_DIR, newName);
+  if (fs.existsSync(oldPath) && !fs.existsSync(newPath)) {
+    fs.renameSync(oldPath, newPath);
+  }
+}
+// 迁移 audio-cache
+const oldAudioDir = path.join(__dirname, "audio-cache");
+if (fs.existsSync(oldAudioDir) && oldAudioDir !== AUDIO_CACHE_DIR) {
+  const files = fs.readdirSync(oldAudioDir);
+  for (const f of files) {
+    const src = path.join(oldAudioDir, f);
+    const dst = path.join(AUDIO_CACHE_DIR, f);
+    if (!fs.existsSync(dst)) fs.renameSync(src, dst);
+  }
+  // 删除旧目录（如果空了）
+  try { fs.rmdirSync(oldAudioDir); } catch (e) {}
+}
 
 // ─── 词库注册表 ─────────────────────────────────────────
 const DICT_REGISTRY = [
