@@ -1,11 +1,12 @@
 #!/bin/bash
 # Codep 一键安装脚本
-# 用法: curl -fsSL https://raw.githubusercontent.com/zemul/codep/main/install.sh | bash
+# 用法: curl -fsSL https://github.com/zemul/codep/releases/latest/download/install.sh | bash
 
 set -e
 
 INSTALL_DIR="$HOME/codep"
 REPO="https://github.com/zemul/codep.git"
+LATEST_RELEASE_URL="https://github.com/zemul/codep/releases/latest"
 
 echo "⌨️  Codep 安装中..."
 echo ""
@@ -21,14 +22,28 @@ check_dep() {
 
 check_dep git "请安装 git"
 check_dep node "请安装 Node.js 16+: https://nodejs.org"
+check_dep curl "请安装 curl"
+
+# 安装最新稳定版本，而不是默认分支上的未发布代码。
+RESOLVED_RELEASE_URL="$(curl -fsSL -o /dev/null -w '%{url_effective}' "$LATEST_RELEASE_URL")"
+LATEST_VERSION="${RESOLVED_RELEASE_URL##*/}"
+if [[ ! "$LATEST_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "❌ 无法获取最新稳定版本"
+  exit 1
+fi
+echo "📌 最新稳定版本：$LATEST_VERSION"
 
 # 克隆或更新
-if [ -d "$INSTALL_DIR" ]; then
+if [ -d "$INSTALL_DIR/.git" ]; then
   echo "📦 更新已有安装..."
-  git -C "$INSTALL_DIR" pull --quiet
+  git -C "$INSTALL_DIR" fetch --tags --quiet
+  git -C "$INSTALL_DIR" checkout --quiet --detach "$LATEST_VERSION"
+elif [ -e "$INSTALL_DIR" ]; then
+  echo "❌ $INSTALL_DIR 已存在，但不是 Codep Git 仓库"
+  exit 1
 else
   echo "📦 克隆到 $INSTALL_DIR..."
-  git clone --quiet "$REPO" "$INSTALL_DIR"
+  git clone --quiet --depth 1 --branch "$LATEST_VERSION" "$REPO" "$INSTALL_DIR"
 fi
 
 # 确保脚本可执行

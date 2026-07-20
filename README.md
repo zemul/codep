@@ -27,10 +27,12 @@ AI 等待时间背单词 —— 在 AI agent（Claude Code / Kiro CLI / Codex / 
 一行命令：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zemul/codep/main/install.sh | bash
+curl -fsSL https://github.com/zemul/codep/releases/latest/download/install.sh | bash
 ```
 
-自动完成：克隆代码 → 配置 AI Agent Hooks → 添加 `codep` 别名。
+安装器和实际代码均来自 GitHub 最新的正式 Release，不会直接运行默认分支上的未发布代码。
+
+自动完成：定位最新 Release → 克隆对应 tag → 配置 AI Agent Hooks → 添加 `codep` 命令。
 
 安装后新开终端或 `source ~/.zshrc`，然后：
 
@@ -41,7 +43,9 @@ codep  # 启动
 ### 手动安装
 
 ```bash
-git clone https://github.com/zemul/codep.git ~/codep
+LATEST_RELEASE_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/zemul/codep/releases/latest)
+LATEST_VERSION=${LATEST_RELEASE_URL##*/}
+git clone --depth 1 --branch "$LATEST_VERSION" https://github.com/zemul/codep.git ~/codep
 ~/codep/codep.sh  # 首次运行自动配置 hooks
 ```
 

@@ -45,8 +45,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     --update)
       echo "📦 更新 Codep..."
-      git -C "$SPELL_GUARD_DIR" pull
-      echo "✅ 更新完成"
+      RESOLVED_RELEASE_URL="$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/zemul/codep/releases/latest)"
+      LATEST_VERSION="${RESOLVED_RELEASE_URL##*/}"
+      if [[ ! "$LATEST_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "❌ 无法获取最新稳定版本"
+        exit 1
+      fi
+      git -C "$SPELL_GUARD_DIR" fetch --tags --quiet
+      if git -C "$SPELL_GUARD_DIR" checkout --quiet --detach "$LATEST_VERSION"; then
+        echo "✅ 已更新到 $LATEST_VERSION"
+      else
+        echo "❌ 更新失败，请先处理安装目录中的本地修改"
+        exit 1
+      fi
       exit 0
       ;;
     --import)
