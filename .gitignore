@@ -12,3 +12,4 @@ package-lock.json
 # OS
 .DS_Store
 dicts/coca20000.json
+.review.json

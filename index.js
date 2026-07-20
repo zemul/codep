@@ -9,6 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const https = require("https");
 const { execFile, execSync, spawn } = require("child_process");
+const { getDueWords, getDueCount, recordResult, getOverallStats } = require("./review");
 
 // ─── 配置 ───────────────────────────────────────────────
 const DICTS_DIR = path.join(__dirname, "dicts");
@@ -66,6 +67,8 @@ let hardMode = false; // 听写模式：隐藏单词
 let hideMeaning = false; // 隐藏释义
 let focusMode = false; // 专注模式：练完整章再切回
 let peekWord = false; // Tab 按住时临时显示单词
+let peeked = false; // 本词是否偷看过（影响复习算法）
+let wordHadError = false; // 本词是否拼错过
 let startTime = null;
 let wpm = 0;
 let pollTimer = null;
@@ -73,6 +76,8 @@ let nextWordCache = null;
 let lastAIState = "idle"; // 追踪上一次 AI 状态，只在变化时触发动作
 let menuMode = "dict"; // "dict" | "chapter" | "practice" | "summary"
 let menuSelection = 0;
+let reviewMode = false; // 是否在复习模式（区别于章节模式）
+let lastReviewWords = []; // 上一轮复习的词（用于"再来一轮"）
 
 // ─── 确认是 TTY ─────────────────────────────────────────
 if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -285,14 +290,40 @@ function renderDictMenu() {
   const title = "📚 选择词库";
   write(" ".repeat(centerPad(title.length, cols)) + `${c.bold}${c.cyan}${title}${c.reset}`);
 
+  // 统计概览
+  const overallStats = getOverallStats();
+  if (overallStats.totalLearned > 0) {
+    moveTo(4, 1);
+    const statsLine = `学习: ${overallStats.totalLearned} 词  掌握: ${overallStats.mastered} 词  明日待复习: ${overallStats.dueTomorrow} 词`;
+    write(" ".repeat(centerPad(statsLine.length, cols)) + `${c.dim}${statsLine}${c.reset}`);
+  }
+
+  // "今日复习"入口（始终在最顶部）
+  const dueCount = getDueCount();
+  const reviewRow = overallStats.totalLearned > 0 ? 6 : 5;
+  moveTo(reviewRow, 1);
+  const reviewPrefix = menuSelection === 0 ? `${c.green}▶ ` : "  ";
+  const reviewLabel = dueCount > 0
+    ? `${reviewPrefix}${c.bold}${c.magenta}今日复习${c.reset} ${c.yellow}(${dueCount} 词到期)${c.reset}`
+    : `${reviewPrefix}${c.dim}今日复习 (已完成 ✓)${c.reset}`;
+  write(reviewLabel);
+
+  // 词库列表（从 index 1 开始，上次使用的排最前）
   const progress = loadProgress();
-  for (let i = 0; i < DICT_REGISTRY.length; i++) {
-    const d = DICT_REGISTRY[i];
-    const row = 5 + i * 2;
+  const lastDictId = loadSettings().lastDictId;
+  const sortedDicts = DICT_REGISTRY.slice().sort((a, b) => {
+    if (a.id === lastDictId) return -1;
+    if (b.id === lastDictId) return 1;
+    return 0;
+  });
+  for (let i = 0; i < sortedDicts.length; i++) {
+    const d = sortedDicts[i];
+    const row = reviewRow + 2 + i * 2;
     moveTo(row, 1);
-    const prefix = i === menuSelection ? `${c.green}▶ ` : "  ";
+    const prefix = (i + 1) === menuSelection ? `${c.green}▶ ` : "  ";
     const prog = progress[d.id] ? `${c.yellow}(进度: Ch.${(progress[d.id].lastChapter || 0) + 1})${c.reset}` : "";
-    const line = `${prefix}${c.bold}${d.name}${c.reset} ${c.gray}${d.description}${c.reset} ${prog}`;
+    const label = d.id === lastDictId ? `${c.cyan}${d.name}${c.reset}` : `${d.name}`;
+    const line = `${prefix}${c.bold}${label}${c.reset} ${c.gray}${d.description}${c.reset} ${prog}`;
     write(line);
   }
 
@@ -359,7 +390,7 @@ function renderPractice() {
 
   // 顶部状态栏（简洁一行）
   moveTo(1, 1);
-  const chInfo = `Ch.${currentChapter + 1}`;
+  const chInfo = reviewMode === "replay" ? `[重放]` : reviewMode ? `[复习]` : `Ch.${currentChapter + 1}`;
   const progress = `${wordIndex + 1}/${chapterWords.length}`;
   const soundIcon = autoSpeak ? "🔊" : "🔇";
   const modeIcon = hardMode ? `${c.yellow}听写${c.reset}` : "";
@@ -461,7 +492,7 @@ function renderSummary() {
   const mid = Math.floor(rows / 2);
 
   moveTo(mid - 4, 1);
-  const title = `🎉 Chapter ${currentChapter + 1} 完成！`;
+  const title = reviewMode ? `🎉 今日复习完成！` : `🎉 Chapter ${currentChapter + 1} 完成！`;
   write(" ".repeat(centerPad(title.length, cols)) + `${c.bold}${c.green}${title}${c.reset}`);
 
   moveTo(mid - 2, 1);
@@ -481,13 +512,97 @@ function renderSummary() {
   const s4 = `最佳连击: ${stats.bestStreak} 🔥`;
   write(" ".repeat(centerPad(s4.length, cols)) + s4);
 
+  // 累计统计
+  const overall = getOverallStats();
+  if (overall.totalLearned > 0) {
+    moveTo(mid + 3, 1);
+    const divider = "─".repeat(20);
+    write(" ".repeat(centerPad(20, cols)) + `${c.dim}${divider}${c.reset}`);
+    moveTo(mid + 4, 1);
+    const s5 = `累计学习: ${overall.totalLearned}  已掌握: ${overall.mastered}  明日待复习: ${overall.dueTomorrow}`;
+    write(" ".repeat(centerPad(s5.length, cols)) + `${c.dim}${s5}${c.reset}`);
+  }
+
   moveTo(rows - 2, 1);
-  const hint = "Enter 下一章 | q 返回选择";
+  if (reviewMode) {
+    const remaining = getDueCount();
+    const hint = remaining > 0 ? `还有 ${remaining} 词到期 | Enter 继续 | Esc 返回` : "r 再来一轮 | Enter 返回菜单";
+    write(" ".repeat(centerPad(hint.length, cols)) + `${c.dim}${hint}${c.reset}`);
+  } else {
+    const hint = "Enter 下一章 | Esc 返回";
+    write(" ".repeat(centerPad(hint.length, cols)) + `${c.dim}${hint}${c.reset}`);
+  }
+}
+
+// ─── 复习确认界面 ─────────────────────────────────────────
+function renderReviewConfirm() {
+  const cols = process.stdout.columns || 50;
+  const rows = process.stdout.rows || 20;
+  clearScreen(); hideCursor();
+
+  const mid = Math.floor(rows / 2);
+
+  moveTo(mid - 2, 1);
+  const msg1 = "今日到期词已全部复习完毕";
+  write(" ".repeat(centerPad(msg1.length, cols)) + `${c.green}${msg1}${c.reset}`);
+
+  moveTo(mid, 1);
+  const msg2 = `再来一轮？(${lastReviewWords.length} 词，不影响复习进度)`;
+  write(" ".repeat(centerPad(msg2.length, cols)) + `${c.bold}${msg2}${c.reset}`);
+
+  moveTo(mid + 2, 1);
+  const hint = "Enter 再来一轮 | Esc 返回菜单";
   write(" ".repeat(centerPad(hint.length, cols)) + `${c.dim}${hint}${c.reset}`);
 }
 
+function handleReviewConfirm(key, code) {
+  if (code === 13) {
+    // Enter: 再来一轮
+    reviewMode = "replay";
+    chapterWords = lastReviewWords.slice();
+    wordIndex = 0;
+    stats = { correct: 0, wrong: 0, streak: 0, bestStreak: 0, wordsCompleted: 0 };
+    menuMode = "practice";
+    nextWord();
+  } else if (key === "\x1b" && key.length === 1) {
+    // Esc: 返回菜单
+    menuMode = "dict"; menuSelection = 0; renderDictMenu();
+  }
+}
+
 // ─── 练习逻辑 ────────────────────────────────────────────
+function startReviewMode() {
+  const dueWords = getDueWords();
+  if (dueWords.length === 0) {
+    // 没有到期词，但有上轮记录时询问是否再来一轮
+    if (lastReviewWords.length > 0) {
+      menuMode = "review-confirm";
+      renderReviewConfirm();
+      return;
+    }
+    // 完全没练过，提示后回菜单
+    const cols = process.stdout.columns || 80;
+    const rows = process.stdout.rows || 24;
+    clearScreen(); hideCursor();
+    moveTo(Math.floor(rows / 2), 1);
+    const msg = "今日复习已完成，没有到期的词！";
+    write(" ".repeat(centerPad(msg.length, cols)) + `${c.green}${c.bold}${msg}${c.reset}`);
+    setTimeout(() => { menuMode = "dict"; menuSelection = 0; renderDictMenu(); }, 1500);
+    return;
+  }
+  reviewMode = true;
+  // 复习模式使用第一个词的 dictId 作为 currentDictId（混合词库时取第一个）
+  currentDictId = dueWords[0].dictId || currentDictId;
+  chapterWords = dueWords;
+  lastReviewWords = dueWords.slice(); // 保存本轮词，用于"再来一轮"
+  wordIndex = 0;
+  stats = { correct: 0, wrong: 0, streak: 0, bestStreak: 0, wordsCompleted: 0 };
+  menuMode = "practice";
+  nextWord();
+}
+
 function startChapter(chapter) {
+  reviewMode = false;
   currentChapter = chapter;
   chapterWords = getChapterWords(chapter);
   wordIndex = 0;
@@ -498,15 +613,26 @@ function startChapter(chapter) {
 
 function nextWord() {
   if (wordIndex >= chapterWords.length) {
-    // 章节完成
-    saveProgress();
-    menuMode = "summary";
-    renderSummary();
+    // 完成
+    if (reviewMode) {
+      menuMode = "summary";
+      renderSummary();
+    } else {
+      saveProgress();
+      menuMode = "summary";
+      renderSummary();
+    }
     return;
   }
   currentWord = chapterWords[wordIndex];
+  // 复习模式时 currentDictId 跟随当前词的 dictId
+  if (reviewMode && currentWord.dictId) {
+    currentDictId = currentWord.dictId;
+  }
   cursorPos = 0;
   errorFlash = false;
+  peeked = false;
+  wordHadError = false;
   startTime = Date.now();
   renderPractice();
   speak(currentWord.word);
@@ -537,6 +663,14 @@ function wordCompleted() {
   playSound("correct");
   renderPractice();
 
+  // 记录复习结果（replay 模式不更新，纯练习）
+  if (reviewMode !== "replay") {
+    const result = wordHadError ? "wrong" : (peeked ? "peeked" : "correct");
+    recordResult(currentWord, currentDictId, result);
+  }
+  peeked = false;
+  wordHadError = false;
+
   setTimeout(() => {
     if (pendingPause) {
       pendingPause = false;
@@ -553,6 +687,11 @@ function wordError() {
   errorFlash = true;
   playSound("wrong");
   renderPractice();
+
+  // 标记本词出错过（最终在 wordCompleted 里统一记录）
+  peeked = false; // 出错比偷看更严重，直接标记 wrong
+  wordHadError = true;
+
   setTimeout(() => {
     errorFlash = false;
     cursorPos = 0;
@@ -613,23 +752,37 @@ process.stdin.on("data", (key) => {
     handlePracticeInput(key, code);
   } else if (menuMode === "summary") {
     handleSummaryInput(key, code);
+  } else if (menuMode === "review-confirm") {
+    handleReviewConfirm(key, code);
   }
 });
 
 function handleDictMenu(key, code) {
+  const totalItems = DICT_REGISTRY.length + 1; // +1 for 今日复习
   if (key === "\x1b[A") { menuSelection = Math.max(0, menuSelection - 1); renderDictMenu(); }
-  else if (key === "\x1b[B") { menuSelection = Math.min(DICT_REGISTRY.length - 1, menuSelection + 1); renderDictMenu(); }
+  else if (key === "\x1b[B") { menuSelection = Math.min(totalItems - 1, menuSelection + 1); renderDictMenu(); }
   else if (code === 13) { // Enter
-    const dict = DICT_REGISTRY[menuSelection];
-    currentDictId = dict.id;
-    saveSettings();
-    words = loadDict(dict);
-    totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
-    // 恢复上次进度
-    const progress = loadProgress();
-    menuSelection = (progress[currentDictId] && progress[currentDictId].lastChapter) || 0;
-    menuMode = "chapter";
-    renderChapterMenu();
+    if (menuSelection === 0) {
+      // 今日复习
+      startReviewMode();
+    } else {
+      const lastDictId = loadSettings().lastDictId;
+      const sortedDicts = DICT_REGISTRY.slice().sort((a, b) => {
+        if (a.id === lastDictId) return -1;
+        if (b.id === lastDictId) return 1;
+        return 0;
+      });
+      const dict = sortedDicts[menuSelection - 1];
+      currentDictId = dict.id;
+      saveSettings();
+      words = loadDict(dict);
+      totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
+      // 恢复上次进度
+      const progress = loadProgress();
+      menuSelection = (progress[currentDictId] && progress[currentDictId].lastChapter) || 0;
+      menuMode = "chapter";
+      renderChapterMenu();
+    }
   }
 }
 
@@ -667,13 +820,22 @@ function handlePracticeInput(key, code) {
   // Tab 偷看（临时显示单词+释义 1 秒）
   if (code === 9) {
     peekWord = true;
+    peeked = true; // 标记本词偷看过，影响复习间隔
     renderPractice();
     speak(currentWord.word);
     setTimeout(() => { peekWord = false; if (menuMode === "practice") renderPractice(); }, 1000);
     return;
   }
   // Esc 退出章节
-  if (key === "\x1b" && key.length === 1) { menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu(); return; }
+  if (key === "\x1b" && key.length === 1) {
+    if (reviewMode) {
+      reviewMode = false;
+      menuMode = "dict"; menuSelection = 0; renderDictMenu();
+    } else {
+      menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu();
+    }
+    return;
+  }
   // 暂停中按任意键激活
   if (paused) { paused = false; renderPractice(); speak(currentWord.word); return; }
   // 忽略控制字符
@@ -682,15 +844,42 @@ function handlePracticeInput(key, code) {
 }
 
 function handleSummaryInput(key, code) {
-  if (code === 13) { // Enter - 下一章
-    if (currentChapter + 1 < totalChapters) {
-      menuSelection = currentChapter + 1;
-      startChapter(currentChapter + 1);
+  if (code === 13) { // Enter
+    if (reviewMode) {
+      // 复习模式：检查是否还有到期词
+      const remaining = getDueCount();
+      if (remaining > 0) {
+        startReviewMode(); // 继续复习剩余词
+      } else {
+        reviewMode = false;
+        menuMode = "dict"; menuSelection = 0; renderDictMenu();
+      }
     } else {
-      menuMode = "chapter"; menuSelection = 0; renderChapterMenu();
+      // 章节模式：下一章
+      if (currentChapter + 1 < totalChapters) {
+        menuSelection = currentChapter + 1;
+        startChapter(currentChapter + 1);
+      } else {
+        menuMode = "chapter"; menuSelection = 0; renderChapterMenu();
+      }
+    }
+  } else if (key === "r" || key === "R") {
+    // 再来一轮：用上次的词列表纯练习，不更新复习数据
+    if (reviewMode && lastReviewWords.length > 0) {
+      chapterWords = lastReviewWords.slice();
+      wordIndex = 0;
+      stats = { correct: 0, wrong: 0, streak: 0, bestStreak: 0, wordsCompleted: 0 };
+      reviewMode = "replay"; // 标记为重放模式
+      menuMode = "practice";
+      nextWord();
     }
   } else if (key === "\x1b" && key.length === 1) {
-    menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu();
+    if (reviewMode) {
+      reviewMode = false;
+      menuMode = "dict"; menuSelection = 0; renderDictMenu();
+    } else {
+      menuMode = "chapter"; menuSelection = currentChapter; renderChapterMenu();
+    }
   }
 }
 
@@ -700,6 +889,7 @@ process.stdout.on("resize", () => {
   else if (menuMode === "chapter") renderChapterMenu();
   else if (menuMode === "practice") renderPractice();
   else if (menuMode === "summary") renderSummary();
+  else if (menuMode === "review-confirm") renderReviewConfirm();
 });
 
 // ─── 退出 ────────────────────────────────────────────────
@@ -739,7 +929,14 @@ const settings = loadSettings();
 const progress = loadProgress();
 
 function autoResume() {
-  // 优先用 settings 里记录的上次词库
+  // 复习优先：有到期词时自动进入复习模式
+  const dueCount = getDueCount();
+  if (dueCount > 0) {
+    startReviewMode();
+    return true;
+  }
+
+  // 否则继续上次的词库和章节
   const lastDictId = settings.lastDictId;
   const lastDict = lastDictId && DICT_REGISTRY.find(d => d.id === lastDictId);
   if (lastDict) {
