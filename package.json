@@ -1,6 +1,6 @@
 {
   "name": "codep",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "AI 等待时间背单词 - Qwerty Learner 终端版",
   "main": "index.js",
   "bin": {
