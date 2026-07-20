@@ -9,10 +9,7 @@
  */
 
 const fs = require("fs");
-const path = require("path");
-
-const DATA_DIR = process.env.CODEP_DATA_DIR || path.join(require("os").homedir(), ".codep");
-const REVIEW_FILE = path.join(DATA_DIR, "review.json");
+const { REVIEW_FILE } = require("./config");
 
 // SM-2 参数
 const INITIAL_EASE = 2.5;

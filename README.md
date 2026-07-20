@@ -132,7 +132,7 @@ codep -a gal           # 强制用 GAL
 ]
 ```
 
-然后在 `index.js` 的 `DICT_REGISTRY` 数组里注册。
+然后在 `src/config.js` 的 `DICT_REGISTRY` 数组里注册。
 
 ## 工作原理
 
@@ -149,7 +149,7 @@ codep -a gal           # 强制用 GAL
                     │
                     ▼ 文件
 ┌─────────────────────────────────────────────┐
-│  index.js (练习 UI)                         │
+│  index.js → src/ui/input.js (练习 UI)       │
 │                                             │
 │  每 500ms 检查 .ai-state                    │
 │  busy → 激活练习 + 焦点切到练习 pane         │

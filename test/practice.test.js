@@ -8,7 +8,7 @@ const {
   scheduleCardRepeat,
   cardResult,
   cardRatingForKey,
-} = require("./practice");
+} = require("../src/practice");
 
 test("旧设置或未知设置默认使用拼写强化", () => {
   assert.equal(normalizeLearningMode(undefined), LEARNING_MODES.SPELLING);

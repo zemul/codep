@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { displayWidth, truncateDisplay, centerPad } = require("./terminal");
+const { displayWidth, truncateDisplay, centerPad } = require("../src/terminal");
 
 test("终端宽度按中文双列、英文单列计算", () => {
   assert.equal(displayWidth("abc"), 3);

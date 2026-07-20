@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { calcNext, normalizeResult } = require("./review");
+const { calcNext, normalizeResult } = require("../src/review");
 
 function card(overrides = {}) {
   return { interval: 3, ease: 2.5, repetitions: 2, ...overrides };

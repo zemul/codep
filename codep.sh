@@ -68,11 +68,11 @@ while [[ $# -gt 0 ]]; do
       # 计算词数
       COUNT=$(node -e "process.stdout.write(String(JSON.parse(require('fs').readFileSync('$FILE','utf8')).length))")
       DICT_ID="${BASENAME%.json}"
-      # 注册到 index.js（如果还没注册）
-      if ! grep -q "\"$DICT_ID\"" "$SPELL_GUARD_DIR/index.js"; then
+      # 注册到词库配置（如果还没注册）
+      if ! grep -q "\"$DICT_ID\"" "$SPELL_GUARD_DIR/src/config.js"; then
         node -e "
           const fs = require('fs');
-          const f = '$SPELL_GUARD_DIR/index.js';
+          const f = '$SPELL_GUARD_DIR/src/config.js';
           let code = fs.readFileSync(f, 'utf8');
           const entry = '  { id: \"$DICT_ID\", name: \"$DICT_ID\", file: \"$BASENAME\", description: \"${COUNT} 词 (导入)\" },';
           code = code.replace(
