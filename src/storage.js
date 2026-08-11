@@ -69,10 +69,20 @@ function saveSettings(updates) {
   return settings;
 }
 
+/**
+ * 解析词库文件的实际路径：优先 dicts/，兼容旧的仓库根目录。
+ * 用 path.resolve 而不是 path.join，这样 dictInfo.file 给绝对路径时也能正常工作。
+ * @param {{file: string}} dictInfo
+ * @returns {string} 绝对路径（文件不存在时返回 legacy 路径，交给调用方处理）
+ */
+function resolveDictPath(dictInfo) {
+  const primaryPath = path.resolve(DICTS_DIR, dictInfo.file);
+  const legacyPath = path.resolve(ROOT_DIR, dictInfo.file);
+  return fs.existsSync(primaryPath) ? primaryPath : legacyPath;
+}
+
 function loadDict(dictInfo) {
-  const primaryPath = path.join(DICTS_DIR, dictInfo.file);
-  const legacyPath = path.join(ROOT_DIR, dictInfo.file);
-  const raw = JSON.parse(fs.readFileSync(fs.existsSync(primaryPath) ? primaryPath : legacyPath, "utf8"));
+  const raw = JSON.parse(fs.readFileSync(resolveDictPath(dictInfo), "utf8"));
   return raw.map((item) => {
     if (item.word && item.meaning) return item;
     return {
@@ -94,6 +104,7 @@ module.exports = {
   saveProgress,
   loadSettings,
   saveSettings,
+  resolveDictPath,
   loadDict,
   getChapterWords,
 };

@@ -130,6 +130,8 @@ codep -a gal           # 强制用 GAL
 
 然后在 `src/config.js` 的 `DICT_REGISTRY` 数组里注册。
 
+改过词库文件之后不用重启：今日复习和错题本会自动显示最新的释义（机制和已知边界见 [docs/review-cache.md](docs/review-cache.md)）。
+
 ## 工作原理
 
 ```
