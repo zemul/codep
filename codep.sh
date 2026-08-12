@@ -71,34 +71,8 @@ while [[ $# -gt 0 ]]; do
         echo "   文件格式: [{\"name\": \"word\", \"trans\": [\"释义\"]}, ...]"
         exit 1
       fi
-      # 验证 JSON 格式
-      if ! node -e "const d=JSON.parse(require('fs').readFileSync('$FILE','utf8')); if(!Array.isArray(d))throw new Error('not array'); if(!d[0].name)throw new Error('missing name field'); console.log(d.length+' 个单词')" 2>/dev/null; then
-        echo "❌ JSON 格式不对"
-        echo "   需要: [{\"name\": \"word\", \"trans\": [\"释义\"]}, ...]"
-        exit 1
-      fi
-      # 复制到 dicts 目录
-      BASENAME="$(basename "$FILE")"
-      cp "$FILE" "$SPELL_GUARD_DIR/dicts/$BASENAME"
-      # 计算词数
-      COUNT=$(node -e "process.stdout.write(String(JSON.parse(require('fs').readFileSync('$FILE','utf8')).length))")
-      DICT_ID="${BASENAME%.json}"
-      # 注册到词库配置（如果还没注册）
-      if ! grep -q "\"$DICT_ID\"" "$SPELL_GUARD_DIR/src/config.js"; then
-        node -e "
-          const fs = require('fs');
-          const f = '$SPELL_GUARD_DIR/src/config.js';
-          let code = fs.readFileSync(f, 'utf8');
-          const entry = '  { id: \"$DICT_ID\", name: \"$DICT_ID\", file: \"$BASENAME\", description: \"${COUNT} 词 (导入)\" },';
-          code = code.replace(
-            /^(const DICT_REGISTRY = \[)/m,
-            '\$1\n' + entry
-          );
-          fs.writeFileSync(f, code);
-        "
-      fi
-      echo "✅ 已导入: $BASENAME ($COUNT 个单词)"
-      echo "   重启 codep 后可选择该词库"
+      CODEP_USER_DICTS_DIR="${CODEP_DATA_DIR:-$HOME/.codep}/dicts"
+      node "$SPELL_GUARD_DIR/src/import-dict.js" "$FILE" "$CODEP_USER_DICTS_DIR"
       exit 0
       ;;
     -h|--help)

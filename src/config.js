@@ -1,9 +1,11 @@
 const os = require("os");
 const path = require("path");
+const { discoverCustomDicts } = require("./custom-dicts");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const DATA_DIR = process.env.CODEP_DATA_DIR || path.join(os.homedir(), ".codep");
 const DICTS_DIR = path.join(ROOT_DIR, "dicts");
+const USER_DICTS_DIR = path.join(DATA_DIR, "dicts");
 const STATE_FILE = path.join(ROOT_DIR, ".ai-state");
 const PROGRESS_FILE = path.join(DATA_DIR, "progress.json");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
@@ -18,7 +20,7 @@ const CHAPTER_LENGTH = 20;
 const YOUDAO_API = "https://dict.youdao.com/dictvoice";
 const PRONUNCIATION_TYPE = 2;
 
-const DICT_REGISTRY = [
+const BUILTIN_DICT_REGISTRY = [
   { id: "it-words", name: "程序员常见词", file: "it-words.json", description: "1700 个编程常用英语单词" },
   { id: "cet4", name: "CET-4 四级", file: "cet4.json", description: "大学英语四级 2607 词" },
   { id: "cet6", name: "CET-6 六级", file: "CET6_T.json", description: "大学英语六级 2345 词" },
@@ -34,10 +36,18 @@ const DICT_REGISTRY = [
   { id: "linux", name: "Linux 命令", file: "linux-command.json", description: "Linux 常用命令 575 条" },
 ];
 
+// 用户目录优先；安装目录扫描用于兼容旧版手工放入 dicts/ 的词库。
+const CUSTOM_DICT_REGISTRY = discoverCustomDicts(
+  [USER_DICTS_DIR, DICTS_DIR],
+  BUILTIN_DICT_REGISTRY.map((dict) => dict.id)
+);
+const DICT_REGISTRY = [...BUILTIN_DICT_REGISTRY, ...CUSTOM_DICT_REGISTRY];
+
 module.exports = {
   ROOT_DIR,
   DATA_DIR,
   DICTS_DIR,
+  USER_DICTS_DIR,
   STATE_FILE,
   PROGRESS_FILE,
   SETTINGS_FILE,
@@ -51,4 +61,5 @@ module.exports = {
   YOUDAO_API,
   PRONUNCIATION_TYPE,
   DICT_REGISTRY,
+  BUILTIN_DICT_REGISTRY,
 };

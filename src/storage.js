@@ -4,6 +4,7 @@ const {
   ROOT_DIR,
   DATA_DIR,
   DICTS_DIR,
+  USER_DICTS_DIR,
   PROGRESS_FILE,
   SETTINGS_FILE,
   AUDIO_CACHE_DIR,
@@ -12,7 +13,7 @@ const {
 } = require("./config");
 
 function initializeStorage() {
-  for (const dir of [DATA_DIR, AUDIO_CACHE_DIR, SOUNDS_DIR]) {
+  for (const dir of [DATA_DIR, USER_DICTS_DIR, AUDIO_CACHE_DIR, SOUNDS_DIR]) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   }
 

@@ -120,7 +120,7 @@ codep -a gal           # 强制用 GAL
 
 ### 添加自定义词库
 
-在 `dicts/` 下放 JSON 文件，格式：
+准备一个 JSON 文件，格式：
 
 ```json
 [
@@ -128,7 +128,15 @@ codep -a gal           # 强制用 GAL
 ]
 ```
 
-然后在 `src/config.js` 的 `DICT_REGISTRY` 数组里注册。
+然后导入：
+
+```bash
+codep --import ./my-words.json
+```
+
+词库会保存到 `~/.codep/dicts/` 并在启动时自动注册，不会修改程序源码，升级或重新安装 Codep 也不会丢失。也可以直接把合法的 JSON 文件放进该目录。
+
+旧版放在安装目录 `dicts/` 下的自定义词库仍会被自动识别，建议重新执行一次 `codep --import`，将它迁移到用户数据目录。
 
 改过词库文件之后不用重启：今日复习和错题本会自动显示最新的释义（机制和已知边界见 [docs/review-cache.md](docs/review-cache.md)）。
 
