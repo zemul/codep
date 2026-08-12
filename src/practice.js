@@ -67,6 +67,14 @@ function cardRatingForKey(key) {
   return null;
 }
 
+/**
+ * 复习列表可能混合多个词库，记录结果时必须使用当前单词自己的词库。
+ * 普通章节练习的单词不带 dictId，此时退回当前选中的词库。
+ */
+function reviewResultDictId(word, fallbackDictId) {
+  return word?.dictId || fallbackDictId;
+}
+
 module.exports = {
   LEARNING_MODES,
   normalizeLearningMode,
@@ -77,4 +85,5 @@ module.exports = {
   scheduleCardRepeat,
   cardResult,
   cardRatingForKey,
+  reviewResultDictId,
 };

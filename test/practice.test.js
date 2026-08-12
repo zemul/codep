@@ -8,6 +8,7 @@ const {
   scheduleCardRepeat,
   cardResult,
   cardRatingForKey,
+  reviewResultDictId,
 } = require("../src/practice");
 
 test("旧设置或未知设置默认使用拼写强化", () => {
@@ -59,4 +60,12 @@ test("卡片主键区使用 J、K、L 评分且兼容大写", () => {
   assert.equal(cardRatingForKey("j"), "known");
   assert.equal(cardRatingForKey("K"), "fuzzy");
   assert.equal(cardRatingForKey("l"), "unknown");
+});
+
+test("混合词库复习时成绩记到当前单词所属词库", () => {
+  assert.equal(reviewResultDictId({ word: "cache", dictId: "it-words" }, "cet4"), "it-words");
+});
+
+test("普通章节练习使用当前选中的词库记录成绩", () => {
+  assert.equal(reviewResultDictId({ word: "apple" }, "cet4"), "cet4");
 });

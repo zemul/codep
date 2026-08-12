@@ -32,6 +32,7 @@ const {
   scheduleCardRepeat,
   cardResult,
   cardRatingForKey,
+  reviewResultDictId,
 } = require("../practice");
 const { clearScreen, moveTo, hideCursor, showCursor, centerPad, write, c } = require("../terminal");
 const { speak: playSpeech, prefetch, playSound: playEffect, ensureSoundFiles, hasAudioPlayer } = require("../audio");
@@ -287,7 +288,7 @@ function wordCompleted() {
   // 记录复习结果（replay 模式不更新，纯练习）
   if (reviewMode !== "replay") {
     const result = wordHadError ? "spelling_wrong" : (peeked ? "spelling_peeked" : "spelling_correct");
-    recordResult(currentWord, currentDictId, result);
+    recordResult(currentWord, reviewResultDictId(currentWord, currentDictId), result);
   }
   peeked = false;
   wordHadError = false;
@@ -327,7 +328,11 @@ function rateCard(rating) {
       stats.wrong++;
     }
     if (reviewMode !== "replay") {
-      recordResult(currentWord, currentDictId, cardResult(rating));
+      recordResult(
+        currentWord,
+        reviewResultDictId(currentWord, currentDictId),
+        cardResult(rating)
+      );
     }
     currentWord._session.longTermRecorded = true;
   }
