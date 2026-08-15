@@ -43,21 +43,14 @@ function normalizeResult(result) {
 // codep 常常在 tmux 里一挂就是好几天，所以缓存必须能在进程运行中失效，
 // 否则只是把「永不更新」的问题从 review.json 挪进内存而已。
 
-/** dictId -> { path, stamp, words: Map<word, entry> | null } */
+/** dictId -> { stamp, words: Map<word, entry> | null } */
 const dictCache = new Map();
 
 /**
- * 词库文件指纹。
+ * 词库文件指纹。必须用 statSync 而不是 lstatSync —— 软链自身的 mtime
+ * 创建后永不变，会做出一个永不失效的缓存。取舍详见 docs/review-cache.md。
  *
- * 用 statSync 而不是 lstatSync —— 词库可能是软链（作者的生词本就软链到
- * 笔记库），lstat 拿到的是软链自身的 mtime，创建之后永远不变，会做出一个
- * 看起来在失效、实际永不失效的缓存。
- *
- * 指纹里带 dev+ino：编辑器常用「写临时文件再 rename」保存，inode 会变而
- * mtime 未必动；带 mtimeNs：应对同一秒内的两次原地写入。
- *
- * @returns {string} 有效指纹，或文件不存在时的 "missing"（真实指纹形如 n:n:n:n，不会撞）
- * @returns {null} stat 本身失败（ELOOP / EACCES / ENOTDIR 等）——拿不到有效指纹
+ * @returns {string|null} 指纹（文件不存在时为 "missing"）；stat 本身失败时为 null
  */
 function dictFileStamp(filePath) {
   try {
@@ -80,27 +73,18 @@ function getDictWordMap(dictId) {
   // 正是本次要消灭的那类 bug。所以不写缓存，下次重试。
   if (stamp === null) return null;
 
-  // path 也要比：覆盖词库从仓库根目录挪进 dicts/ 的情况。
   const cached = dictCache.get(dictId);
-  if (cached && cached.path === filePath && cached.stamp === stamp) return cached.words;
+  if (cached && cached.stamp === stamp) return cached.words;
 
   let words = null;
   try {
     words = new Map(loadDict(dictInfo).map((w) => [w.word, w]));
   } catch {
-    words = null; // 文件缺失/损坏：退回快照
+    // 文件缺失/损坏：words 保持 null，退回快照
   }
   // 解析失败也按指纹缓存：文件修好后指纹会变，能自愈。
-  dictCache.set(dictId, { path: filePath, stamp, words });
+  dictCache.set(dictId, { stamp, words });
   return words;
-}
-
-/**
- * 清空词库缓存。
- * 目前只有测试用；将来若要加「重载词库」快捷键，也是走这里。
- */
-function resetDictCache() {
-  dictCache.clear();
 }
 
 /**
@@ -405,5 +389,4 @@ module.exports = {
   mergeCardWithDict,
   selectDueCards,
   selectMistakeCards,
-  resetDictCache,
 };
