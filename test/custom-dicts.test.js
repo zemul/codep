@@ -61,3 +61,10 @@ test("自动发现软链接形式的自定义词库", (t) => {
 
   assert.equal(discoverCustomDicts([directory])[0].id, "linked");
 });
+
+test("内置词库不会被当成自定义词库重复发现", () => {
+  const { DICT_REGISTRY, DICTS_DIR } = require("../src/config");
+  // 内置的 file 是相对路径、发现的是绝对路径，不 resolve 这个断言会恒真。
+  const files = DICT_REGISTRY.map((dict) => path.resolve(DICTS_DIR, dict.file));
+  assert.equal(new Set(files).size, files.length, "同一个词库文件被注册了多次");
+});
