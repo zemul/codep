@@ -39,7 +39,8 @@ const BUILTIN_DICT_REGISTRY = [
 // 用户目录优先；安装目录扫描用于兼容旧版手工放入 dicts/ 的词库。
 const CUSTOM_DICT_REGISTRY = discoverCustomDicts(
   [USER_DICTS_DIR, DICTS_DIR],
-  BUILTIN_DICT_REGISTRY.map((dict) => dict.id)
+  // 内置词库的 id 和文件名常对不上（cet6 → CET6_T.json），两种都要占住。
+  BUILTIN_DICT_REGISTRY.flatMap((dict) => [dict.id, path.basename(dict.file, path.extname(dict.file))])
 );
 const DICT_REGISTRY = [...BUILTIN_DICT_REGISTRY, ...CUSTOM_DICT_REGISTRY];
 
