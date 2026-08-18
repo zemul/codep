@@ -35,7 +35,6 @@ const {
   saveReviewData,
   loadReviewData,
   recordResult,
-  resetDictCache,
 } = require("../src/review");
 
 // ─── 临时词库 ────────────────────────────────────────────
@@ -56,6 +55,7 @@ after(() => {
 });
 
 // 显式推进 mtime，避免文件系统时间戳精度导致的偶发失败。
+// 这也是测试之间不需要手动清词库缓存的原因：指纹变了就会自然失效。
 let clock = Date.now();
 function writeDict(entries, file = DICT_FILE) {
   fs.writeFileSync(file, JSON.stringify(entries));
@@ -81,16 +81,11 @@ function dueCard(overrides = {}) {
   };
 }
 
-function seed(cards) {
-  saveReviewData(cards);
-  resetDictCache();
-}
-
 // ─── 主线：编辑词库后释义要刷新 ──────────────────────────
 
 test("编辑词库文件后今日复习显示新释义", () => {
   writeDict([{ name: "alpha", trans: ["第一版释义"] }]);
-  seed({ "__test:alpha": dueCard() });
+  saveReviewData({ "__test:alpha": dueCard() });
 
   assert.equal(getDueWords()[0].meaning, "第一版释义");
 
@@ -101,7 +96,7 @@ test("编辑词库文件后今日复习显示新释义", () => {
 
 test("编辑词库文件后错题本显示新释义", () => {
   writeDict([{ name: "alpha", trans: ["错题第一版"] }]);
-  seed({ "__test:alpha": dueCard() });
+  saveReviewData({ "__test:alpha": dueCard() });
 
   assert.equal(getMistakeWords()[0].meaning, "错题第一版");
 
@@ -111,7 +106,7 @@ test("编辑词库文件后错题本显示新释义", () => {
 
 test("进程运行中编辑词库会让缓存失效", () => {
   writeDict([{ name: "alpha", trans: ["旧"] }]);
-  seed({ "__test:alpha": dueCard() });
+  saveReviewData({ "__test:alpha": dueCard() });
   getDueWords(); // 先把缓存填上
 
   writeDict([{ name: "alpha", trans: ["新"] }]);
@@ -120,7 +115,7 @@ test("进程运行中编辑词库会让缓存失效", () => {
 
 test("词库文件时间戳未变时复用缓存", () => {
   writeDict([{ name: "alpha", trans: ["AAA"] }]);
-  seed({ "__test:alpha": dueCard() });
+  saveReviewData({ "__test:alpha": dueCard() });
   assert.equal(getDueWords()[0].meaning, "AAA");
 
   // 同字节长度改写内容，再把 mtime/atime 还原 —— 指纹完全不变。
@@ -138,7 +133,7 @@ test("词库文件时间戳未变时复用缓存", () => {
 test("多个词库混在同一批到期词里各取各的释义", () => {
   writeDict([{ name: "alpha", trans: ["主词库释义"] }]);
   writeDict([{ name: "beta", trans: ["副词库释义"] }], ALT_FILE);
-  seed({
+  saveReviewData({
     "__test:alpha": dueCard({ word: "alpha", dictId: "__test" }),
     "__alt:beta": dueCard({ word: "beta", dictId: "__alt" }),
   });
@@ -151,7 +146,7 @@ test("多个词库混在同一批到期词里各取各的释义", () => {
 
 test("练习后快照写回的是词库新释义", () => {
   writeDict([{ name: "alpha", trans: ["词库新释义"] }]);
-  seed({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
+  saveReviewData({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
 
   recordResult(getDueWords()[0], "__test", "correct");
   assert.equal(loadReviewData()["__test:alpha"].meaning, "词库新释义");
@@ -160,7 +155,7 @@ test("练习后快照写回的是词库新释义", () => {
 test("词库释义为空时不覆盖已有快照", () => {
   // 展示要说真话（显示空），但快照是词被删除后的唯一兜底，不能被空值冲掉。
   writeDict([{ name: "alpha", trans: [""] }]);
-  seed({ "__test:alpha": dueCard({ meaning: "历史快照", phonetic: "/旧音标/" }) });
+  saveReviewData({ "__test:alpha": dueCard({ meaning: "历史快照", phonetic: "/旧音标/" }) });
 
   const shown = getDueWords()[0];
   assert.equal(shown.meaning, "", "展示：词库为准");
@@ -176,22 +171,22 @@ test("词库释义为空时不覆盖已有快照", () => {
 
 test("词库里已删除的词退回卡片快照", () => {
   writeDict([]);
-  seed({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
+  saveReviewData({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
   assert.equal(getDueWords()[0].meaning, "历史快照");
 });
 
 test("未注册的词库 id 直接退回快照", () => {
-  seed({ "__nope:alpha": dueCard({ dictId: "__nope", meaning: "历史快照" }) });
+  saveReviewData({ "__nope:alpha": dueCard({ dictId: "__nope", meaning: "历史快照" }) });
   assert.equal(getDueWords()[0].meaning, "历史快照");
 });
 
 test("卡片缺少 dictId 时退回快照", () => {
-  seed({ "undefined:alpha": dueCard({ dictId: undefined, meaning: "历史快照" }) });
+  saveReviewData({ "undefined:alpha": dueCard({ dictId: undefined, meaning: "历史快照" }) });
   assert.equal(getDueWords()[0].meaning, "历史快照");
 });
 
 test("词库文件损坏时不崩溃并退回快照", () => {
-  seed({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
+  saveReviewData({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
   fs.writeFileSync(DICT_FILE, "{ 这不是合法 JSON");
   clock += 2000;
   fs.utimesSync(DICT_FILE, new Date(clock), new Date(clock));
@@ -202,7 +197,7 @@ test("词库文件损坏时不崩溃并退回快照", () => {
 test("注册了但文件不存在时不崩溃", () => {
   // 这是每个新 clone 的默认状态：coca20000.json 被 gitignore 且不在仓库里；
   // 软链词库的目标不可达时也是这个分支。
-  seed({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
+  saveReviewData({ "__test:alpha": dueCard({ meaning: "历史快照" }) });
   fs.rmSync(DICT_FILE, { force: true });
 
   assert.equal(getDueWords()[0].meaning, "历史快照");
@@ -219,7 +214,7 @@ test("词库是软链时改目标文件也要刷新释义", () => {
   const linkDict = { id: "__link", name: "软链词库", file: link, description: "" };
   DICT_REGISTRY.push(linkDict);
   try {
-    seed({ "__link:alpha": dueCard({ dictId: "__link" }) });
+    saveReviewData({ "__link:alpha": dueCard({ dictId: "__link" }) });
     assert.equal(getDueWords()[0].meaning, "软链旧");
 
     // 只改软链指向的真实文件，软链自身完全没动
@@ -241,7 +236,7 @@ test("stat 失败时退回快照而不是继续用旧缓存", () => {
   try {
     // 先正常加载一次，把缓存填上
     writeDict([{ name: "alpha", trans: ["词库版本"] }], loopA);
-    seed({ "__loop:alpha": dueCard({ dictId: "__loop", meaning: "历史快照" }) });
+    saveReviewData({ "__loop:alpha": dueCard({ dictId: "__loop", meaning: "历史快照" }) });
     assert.equal(getDueWords()[0].meaning, "词库版本");
 
     // 再把这个路径换成软链循环，让 stat 抛错
@@ -263,7 +258,7 @@ test("stat 失败时退回快照而不是继续用旧缓存", () => {
 test("数量接口与列表接口结果一致", () => {
   // 两者过去是同一份代码，现在拆成了两个独立调用点，容易悄悄漂移。
   writeDict([{ name: "alpha", trans: ["x"] }]);
-  seed({
+  saveReviewData({
     "__test:alpha": dueCard({ word: "alpha" }),
     "__test:beta": dueCard({ word: "beta", weaknessScore: 0, totalMistakes: 0 }),
     "__test:gamma": dueCard({ word: "gamma", nextReview: "2099-01-01" }),
