@@ -94,6 +94,12 @@ function loadDict(dictInfo) {
   });
 }
 
+// 词库文件可能缺失或损坏（自定义词库尤其常见）。调用方需要留在原界面提示，
+// 而不是让未捕获的异常掀掉整个 TUI，所以这里把异常收敛成 null。
+function tryLoadDict(dictInfo) {
+  try { return loadDict(dictInfo); } catch { return null; }
+}
+
 function getChapterWords(words, chapter) {
   const start = chapter * CHAPTER_LENGTH;
   return words.slice(start, Math.min(start + CHAPTER_LENGTH, words.length));
@@ -101,6 +107,7 @@ function getChapterWords(words, chapter) {
 
 module.exports = {
   initializeStorage,
+  tryLoadDict,
   loadProgress,
   saveProgress,
   loadSettings,
