@@ -16,7 +16,8 @@ const SOUND_FILES = {
 };
 
 function getAudioPath(word) {
-  return path.join(AUDIO_CACHE_DIR, `${word}.mp3`);
+  // 词条可能含 / 等路径字符（如自定义词库里的 "contort / distort"），直接拼会指向不存在的子目录。
+  return path.join(AUDIO_CACHE_DIR, `${word.replace(/[^a-zA-Z0-9 _-]/g, "_")}.mp3`);
 }
 
 function downloadAudio(word, callback) {
@@ -24,6 +25,8 @@ function downloadAudio(word, callback) {
   if (fs.existsSync(audioPath)) { callback?.(audioPath); return; }
   const url = `${YOUDAO_API}?audio=${encodeURIComponent(word)}&type=${PRONUNCIATION_TYPE}`;
   const file = fs.createWriteStream(audioPath);
+  // 没有这个监听，写失败会抛未处理的 'error' 事件，整个 TUI 直接退出。
+  file.on("error", () => { callback?.(null); });
   https.get(url, (response) => {
     if (response.statusCode !== 200) {
       file.close();
@@ -102,4 +105,4 @@ function hasAudioPlayer() {
   });
 }
 
-module.exports = { downloadAudio, speak, prefetch, playSound, ensureSoundFiles, hasAudioPlayer };
+module.exports = { getAudioPath, downloadAudio, speak, prefetch, playSound, ensureSoundFiles, hasAudioPlayer };
