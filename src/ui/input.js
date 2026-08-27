@@ -14,7 +14,7 @@ const {
   saveProgress,
   loadSettings,
   saveSettings: writeSettings,
-  loadDict,
+  tryLoadDict,
   getChapterWords,
 } = require("../storage");
 const {
@@ -52,6 +52,7 @@ let stats = createStats();
 let paused = false;
 let pendingPause = false;
 let errorFlash = false;
+let menuError = null;
 let autoSpeak = true;
 let keySoundsEnabled = true;
 let hardMode = false; // 听写模式：隐藏单词
@@ -104,6 +105,7 @@ function readViewState() {
     focusMode,
     cursorPos,
     lastReviewWords,
+    menuError,
   };
 }
 
@@ -429,9 +431,16 @@ function handleDictMenu(key, code) {
         return 0;
       });
       const dict = sortedDicts[menuSelection - 2];
+      const loaded = tryLoadDict(dict);
+      if (!loaded) {
+        menuError = `无法加载词库「${dict.name}」：${dict.file} 缺失或格式错误`;
+        renderDictMenu();
+        return;
+      }
+      menuError = null;
       currentDictId = dict.id;
       saveSettings();
-      words = loadDict(dict);
+      words = loaded;
       totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
       // 恢复上次进度
       const progress = loadProgress();
@@ -642,8 +651,11 @@ function autoResume() {
   const lastDictId = settings.lastDictId;
   const lastDict = lastDictId && DICT_REGISTRY.find(d => d.id === lastDictId);
   if (lastDict) {
+    const loaded = tryLoadDict(lastDict);
+    // 上次的词库坏了/没了：退回词库菜单，别在启动时崩掉。
+    if (!loaded) return false;
     currentDictId = lastDict.id;
-    words = loadDict(lastDict);
+    words = loaded;
     totalChapters = Math.ceil(words.length / CHAPTER_LENGTH);
     const chapter = (progress[lastDict.id] && progress[lastDict.id].lastChapter) || 0;
     startChapter(chapter);

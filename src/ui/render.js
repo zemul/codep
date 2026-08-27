@@ -28,6 +28,7 @@ let cardPromptError;
 let focusMode;
 let cursorPos;
 let lastReviewWords;
+let menuError;
 
 function syncState() {
   ({
@@ -54,6 +55,7 @@ function syncState() {
     focusMode,
     cursorPos,
     lastReviewWords,
+    menuError,
   } = readState());
 }
 
@@ -115,6 +117,13 @@ function renderDictMenu() {
     const label = d.id === lastDictId ? `${c.cyan}${d.name}${c.reset}` : `${d.name}`;
     const line = `${prefix}${c.bold}${label}${c.reset} ${c.gray}${d.description}${c.reset} ${prog}`;
     write(line);
+  }
+
+  if (menuError) {
+    // 自定义词库的 file 是绝对路径，可能比终端宽。
+    const errorLine = truncateDisplay(menuError, cols - 2);
+    moveTo(rows - 3, 1);
+    write(" ".repeat(centerPad(errorLine, cols)) + `${c.red}${errorLine}${c.reset}`);
   }
 
   moveTo(rows - 2, 1);
